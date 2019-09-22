@@ -7,10 +7,16 @@ public class Board {
     private PieceStack[] triangles;
     private PieceStack outOfGameWhite;
     private PieceStack outOfGameBlack;
+    private int numPiecesWhite;
+    private int numPiecesBlack;
 
 
     public Board() throws IllegalColourException {
         setUpBoard();
+        outOfGameBlack = new PieceStack("black");
+        outOfGameWhite = new PieceStack("white");
+        numPiecesBlack = 15;
+        numPiecesWhite = 15;
     }
 
     public PieceStack[] getTriangles() {
@@ -81,11 +87,35 @@ public class Board {
         Piece pieceToMove = triangles[from].pop();
         int newTriangle = pieceToMove.move(from, dieRoll);
         if(newTriangle != -1){
-
+            Piece pieceFromStack = triangles[newTriangle].push(pieceToMove);
+            if(!pieceFromStack.getColour().equals(pieceToMove.getColour()))
+                takePieceToMiddle(pieceFromStack);
         }
-
+        else
+            removePieceFromGame(pieceToMove);
 
     }
+
+    private void removePieceFromGame(Piece p){
+
+        if(p.getColour().equals("white"))
+            numPiecesWhite--;
+        else
+            numPiecesBlack--;
+    }
+
+    /**
+     * Removes a piece from the game temporarily.
+     * @param p Single Piece on a Triangle, that is taken out of the game by the opponent.
+     */
+    private void takePieceToMiddle(Piece p){
+
+        if(p.getColour().equals("white"))
+            outOfGameWhite.push(p);
+        else
+            outOfGameBlack.push(p);
+    }
+
 
 
 }
