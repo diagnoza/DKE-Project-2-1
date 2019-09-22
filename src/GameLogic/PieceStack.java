@@ -42,8 +42,8 @@ public class PieceStack extends Stack<Piece>{
             return pushPiece(p);
         }
         catch (IllegalPushException e) {
-            System.out.println(e.getMessage());
-            return null;
+            e.printStackTrace();
+            return p;
         }
     }
 

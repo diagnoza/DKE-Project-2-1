@@ -19,6 +19,14 @@ public class Board {
         numPiecesWhite = 15;
     }
 
+    public int getNumPiecesWhite() {
+        return numPiecesWhite;
+    }
+
+    public int getNumPiecesBlack() {
+        return numPiecesBlack;
+    }
+
     public PieceStack[] getTriangles() {
         return triangles;
     }
@@ -55,6 +63,12 @@ public class Board {
         this.triangles[7] = threeBlacks;
         this.triangles[5] = (PieceStack)fiveBlacks.clone();
 
+        // Populate Null fields
+        for(int i=0; i<24;i++){
+            if(this.triangles[i] == null){
+                this.triangles[i] = new PieceStack("white");
+            }
+        }
 
 
 
@@ -115,6 +129,18 @@ public class Board {
         else
             outOfGameBlack.push(p);
     }
+
+    /**
+     * Check if a piece can be put on a specific triangle
+     * @param from triangle you are taking the piece from
+     * @param to The triangle you are moving the piece to
+     * @return True if the move is legal, False otherwise
+     */
+    public boolean isLegalMove(int from, int to){
+        return triangles[to].isLegalPush(triangles[from].peek());
+    }
+
+
 
 
 
