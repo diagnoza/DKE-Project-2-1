@@ -272,19 +272,19 @@ public class Gui  {
 					    roll.setBorder(new LineBorder(Color.BLUE));
 					   // roll.setBackground(Color.white);
 					    roll.setFont(roll.getFont().deriveFont(20.0f));
-					    roll.addActionListener(new ActionListener() {
-							public void actionPerformed(ActionEvent event) {
+					 
+						
 							
-							       JFrame frameOne = new JFrame("Dice Roller");
-							        frameOne.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-							        frameOne.setSize(500,500);
-							        frameOne.setVisible(true);
-							        ResultGUI resultGUI = new ResultGUI();
-							        frameOne.add(resultGUI);
+							       
+							     
+							        
+							        
+							        
+							       
 
 								
-							}
-						});
+							
+	
 					   
 						
 					frame.setContentPane(new BackgammonBoard());
