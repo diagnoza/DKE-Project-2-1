@@ -74,6 +74,13 @@ public class thirdwindow {
 			    roll.setBorder(new LineBorder(Color.BLUE));
 			   // roll.setBackground(Color.white);
 			    roll.setFont(roll.getFont().deriveFont(20.0f));
+				roll.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent event) {
+						
+						Dice.diceframe();
+						
+					}
+				});
 			    
 			   
 			    		
