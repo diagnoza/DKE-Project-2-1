@@ -5,6 +5,7 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 
 public class BackgammonBoard extends JComponent{
+	
 
 	//Outer white board triangles
 	Triangle tri1 = new Triangle(new int[] {45,72,100},new int[] {45,300,45});
@@ -42,14 +43,12 @@ public class BackgammonBoard extends JComponent{
 	
 	
 	Triangle[] triangle = new Triangle[] {tri1,tri2,tri3,tri4,tri5,tri6,tri7,tri8,tri9,tri10,tri11,tri12,tri13,tri14,tri15,tri16,tri17,tri18,tri19,tri20,tri21,tri22,tri23,tri24};
-
 	
-
 		
 	public void paintComponent(Graphics g)
 	{
 		//Main Rect
-		g.setColor(Color.black);
+		g.setColor(new Color(51,0,0));
 		g.fillRect(30,30, 900,610);
 		
 		//Outer board Rectangle
@@ -64,11 +63,11 @@ public class BackgammonBoard extends JComponent{
 		g.drawRect(795, 45, 100, 285);
 		g.drawRect(795, 330, 100, 285);
 		
-		g.setColor(Color.WHITE);
+		g.setColor(new Color(153,102,0));
 		g.fillRect(1000,30, 300,305);			
 		
 		
-		g.setColor(Color.BLACK);
+		g.setColor(new Color(102,51,0));
 		g.fillRect(1000,335, 300,305);
 		
 		for(int i = 0;i<triangle.length;i++)
@@ -77,12 +76,12 @@ public class BackgammonBoard extends JComponent{
 			{
 				if(i%2==0)
 				{
-					g.setColor(Color.blue);
+					g.setColor(new Color(102,51,0));
 				g.fillPolygon(triangle[i].x,triangle[i].y,3);
 				}
 				else
 				{
-					g.setColor(Color.white);
+					g.setColor(new Color(153,102,0));
 					g.fillPolygon(triangle[i].x,triangle[i].y,3);
 					}
 			}
@@ -90,12 +89,12 @@ public class BackgammonBoard extends JComponent{
 			
 			if(i%2==0)
 			{
-				g.setColor(Color.white);
+				g.setColor(new Color(153,102,0));
 			g.fillPolygon(triangle[i].x,triangle[i].y,3);
 			}
 			else
 			{
-				g.setColor(Color.blue);
+				g.setColor(new Color(102,51,0));
 				g.fillPolygon(triangle[i].x,triangle[i].y,3);
 				}
 			

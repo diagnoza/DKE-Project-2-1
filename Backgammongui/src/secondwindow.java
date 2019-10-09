@@ -38,8 +38,8 @@ public class secondwindow {
 		 JButton HH = new JButton("Human vs Human");
 		HH.setBounds(370,200,300,100);				
 		HH.setBackground(Color.white);
-		HH.setFont(new Font("Black", Font.BOLD, 26));
-		HH.setBorder(new LineBorder(Color.blue));
+		HH.setFont(new Font("Batang", Font.BOLD, 26));
+		HH.setBorder(new LineBorder(Color.blue,5));
 		HH.addMouseListener(new MouseListener() { 
 			public void mouseEntered(MouseEvent e) {
 				
@@ -55,26 +55,26 @@ public class secondwindow {
 			
 				thirdwindow.components();
 				thirdwindow.labels();			
-						
+				thirdwindow.addPieces();		
 			}		
 	});
 		
 		//Human vs Computer button
 		JButton HC = new JButton("Human vs Computer");
 		HC.setBounds(370,350,300,100);
-		HC.setBorder(new LineBorder(Color.blue));
+		HC.setBorder(new LineBorder(Color.blue,5));
 		HC.setBackground(Color.white);
-		HC.setFont(new Font("Black", Font.BOLD, 26));
+		HC.setFont(new Font("Batang", Font.BOLD, 26));
 		
 		//Back button
 		JButton back = new JButton(); 
 		back.setBounds(800,600,140,70); 
-		back.setOpaque(true);
-		back.setBorderPainted(false);				
+		//back.setOpaque(true);
+		//back.setBorderPainted(false);				
 		back.setText("Back");
-		back.setBorder(new LineBorder(Color.blue));
+		back.setBorder(new LineBorder(Color.blue,5));
 		back.setBackground(Color.white);
-		back.setFont(new Font("Black", Font.BOLD, 26));
+		back.setFont(new Font("Batang", Font.BOLD, 26));
 		back.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				
