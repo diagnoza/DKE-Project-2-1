@@ -115,7 +115,7 @@ public class thirdwindow {
 
 	public static void labels(){
 		/**LABELS*/
-		final JLabel label1 = new JLabel("1s");
+		final JLabel label1 = new JLabel("1");
 		label1.setBounds(750,618,15,15);
 		label1.setForeground(Color.white);
 
