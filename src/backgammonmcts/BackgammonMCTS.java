@@ -5,6 +5,7 @@
  */
 package backgammonmcts;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 /**
@@ -16,7 +17,10 @@ public class BackgammonMCTS {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        
+        Tester t = new Tester();
+        t.test(10, 10, 1, 6000, 3000);
         // Board Test
         //Board board = new Board();
         //System.out.println(board.black);
@@ -265,7 +269,8 @@ public class BackgammonMCTS {
             System.out.println("Black wins the game!");
         }
         */
-        //ENTIRE GAME TEST WITH SEPARATE STATS FOR NODES AND ROLLOUTS:
+        
+        /*ENTIRE GAME TEST WITH SEPARATE STATS FOR NODES AND ROLLOUTS:
         Board test = new Board();
         Roll r = new Roll();
         while (r.steps[0] == r.steps[1]) {
@@ -312,6 +317,7 @@ public class BackgammonMCTS {
         System.out.println("Total nodes expanded for Black: " +b.totalnodesexpanded);
         System.out.println("Rollouts completed for Black: " +b.totalrollouts);
         
+        */
 
         //for (int i = 0; i < 10000000; i++) {
                
