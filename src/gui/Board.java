@@ -198,7 +198,7 @@ public class Board {
                     }
                     return -20;
                 } else {
-                    triangles[0].push(pieceToMove);
+                    triangles[23].push(pieceToMove);
                     pieceToMove.setMiddle(false);
                     pieceToMove.stackNumber = 23;
                     pieceToMove.calculateCoordinates("Board", pieceToMove.getHeight(triangles) + 1);
@@ -217,7 +217,7 @@ public class Board {
                         pieceToMove.calculateCoordinates("Board", pieceToMove.getHeight(triangles) + 1);
                     }
                 } else {
-                    triangles[0].push(pieceToMove);
+                    triangles[23].push(pieceToMove);
                     pieceToMove.setMiddle(false);
                     pieceToMove.stackNumber = 23;
                     pieceToMove.calculateCoordinates("Board", pieceToMove.getHeight(triangles) + 1);
