@@ -88,6 +88,7 @@ public class gui {
 
 	            public void mouseClicked(MouseEvent e) {
 	                System.exit(0);
+	            	
 	            }
 	        });
 	      
