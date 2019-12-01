@@ -11,6 +11,7 @@ import java.util.Comparator;
 /**
  *
  * @author Laurin
+ * semi- @author Rudy
  */
 public class MCTS {
 
@@ -67,6 +68,22 @@ public class MCTS {
         }
         Node winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.visits));   
         //System.out.println("The winning node was visited " +winner.state.visits+ " times, and has a score of " +winner.state.score +".");
+        return winner.siblingnumber;
+    }
+    
+    //Plays a random move
+    public int Random(State s) {
+    	tree = new Tree(new Node(s));
+    	
+    	Node current = selectnode(tree.root);
+        current.expandnode();
+        Node rollout = current;
+        if (!current.children.isEmpty()) {
+            rollout = current.getRandomChild();
+        }
+        int result = randomplay(rollout);
+        backpropagate(rollout, result);
+        Node winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.visits));   
         return winner.siblingnumber;
     }
     
