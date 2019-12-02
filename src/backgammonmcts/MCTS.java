@@ -72,19 +72,19 @@ public class MCTS {
     }
     
     //Plays a random move
-    public int Random(State s) {
-    	tree = new Tree(new Node(s));
-    	
-    	Node current = selectnode(tree.root);
-        current.expandnode();
-        Node rollout = current;
-        if (!current.children.isEmpty()) {
-            rollout = current.getRandomChild();
-        }
-        int result = randomplay(rollout);
-        backpropagate(rollout, result);
-        Node winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.visits));   
-        return winner.siblingnumber;
+    public int[] Random(State s) {
+    	//Fill the movelist with all legal moves
+    	s.movehelper(s.getboard(),s.getroll(),s.getwhite());
+    	//Generate a random number between 0 and movelist-size
+    	int randomIndex = (int) (Math.random() * s.getmovelist().size());
+    	//If movelist is empty then return an empty int[]
+    	if (s.getmovelist().isEmpty()) {
+    		return new int[]{};
+    	}
+    	//Else return a random move from the list
+    	else {
+    		return s.getmovelist().get(randomIndex);
+    	}
     }
     
     public double MCTShighestscorepruned (State s, int n) {

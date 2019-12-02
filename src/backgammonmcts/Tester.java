@@ -53,32 +53,42 @@ public class Tester {
             
             while (start.wincheck() == 0) {
                 if (start.white) {
-                	if(AImodeW == 1) {n = w.MCTSmostvisitedpruned(start, whitePrune, whiteTime);}
-                	if(AImodeW == 2) {n = w.Random(start);}
+                	if(AImodeW == 1) {
+                		n = w.MCTSmostvisitedpruned(start, whitePrune, whiteTime);
                 	
-                    n = w.Random(start);
-                    //System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
-                    if (w.tree.root.state.movelist.isEmpty()) {
-                        //System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
-                        next = new State(start, new int[]{});
-                    } else {
-                        //System.out.println(((start.white) ? "White" : "Black") + " plays " +Arrays.toString(w.tree.root.state.movelist.get(n)) +".");
-                        next = new State(start, w.tree.root.state.movelist.get(n));
+                		//System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
+                		if (w.tree.root.state.movelist.isEmpty()) {
+                			//System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
+                			next = new State(start, new int[]{});
+                			} else {
+                			//System.out.println(((start.white) ? "White" : "Black") + " plays " +Arrays.toString(w.tree.root.state.movelist.get(n)) +".");
+                			next = new State(start, w.tree.root.state.movelist.get(n));
+                			}
+                		start = next;
+                		}
+                    if(AImodeW == 2) {
+                    	next = new State(start, w.Random(start));
+                    	start = next;
                     }
-                    start = next;
-                } else {
-                	if(AImodeB == 1) {n = b.MCTSmostvisitedpruned(start, blackPrune, blackTime);}
-                    if(AImodeB == 2) {n = b.Random(start);}
                     
-                    //System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
-                    if (b.tree.root.state.movelist.isEmpty()) {
-                        //System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
-                        next = new State(start, new int[]{});
-                    } else {
-                        //System.out.println(((start.white) ? "White" : "Black") + " plays " +Arrays.toString(b.tree.root.state.movelist.get(n)) +".");
-                        next = new State(start, b.tree.root.state.movelist.get(n));
-                    }
-                    start = next;
+                } else {
+                	if(AImodeB == 1) {
+                		n = b.MCTSmostvisitedpruned(start, blackPrune, blackTime);
+                		
+                		//System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
+                		if (b.tree.root.state.movelist.isEmpty()) {
+                			//System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
+                			next = new State(start, new int[]{});
+                			} else {
+                			//System.out.println(((start.white) ? "White" : "Black") + " plays " +Arrays.toString(b.tree.root.state.movelist.get(n)) +".");
+                			next = new State(start, b.tree.root.state.movelist.get(n));
+                			}
+                		start = next;
+                		}
+                	if(AImodeB == 2) {
+                		next = new State(start, b.Random(start));
+                    	start = next;
+                	}
                 }
             }
             //Adding a point to the winning color
