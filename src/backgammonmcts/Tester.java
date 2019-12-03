@@ -21,6 +21,7 @@ public class Tester {
         double numWhiteWon = 0;
         double numBlackWon = 0;
         double WhiteBlackPercentage;
+        /*int whiteCounter = 0;*/
         
         //Creating timestamp
         Date date= new Date();
@@ -45,6 +46,13 @@ public class Tester {
             }
             
             boolean white = (r.steps[0] > r.steps[1]);
+            
+            /*//Increment whiteCounter if white starts
+            if (white) {
+            	whiteCounter++;
+            }
+            */
+            
             State start = new State(test, white, 0, 0, 0, r);
             MCTS w = new MCTS();
             MCTS b = new MCTS();
@@ -53,6 +61,7 @@ public class Tester {
             
             while (start.wincheck() == 0) {
                 if (start.white) {
+                	//MCTSmostVisitedPruned
                 	if(AImodeW == 1) {
                 		n = w.MCTSmostvisitedpruned(start, whitePrune, whiteTime);
                 	
@@ -66,12 +75,18 @@ public class Tester {
                 			}
                 		start = next;
                 		}
-                    if(AImodeW == 2) {
+                	//Random
+                	else if(AImodeW == 2) {
                     	next = new State(start, w.Random(start));
                     	start = next;
                     }
-                    
+                	//Blitz
+                	else if(AImodeW == 3) {
+                		next = new State(start, w.Blitz(start));
+                    	start = next;
+                    }
                 } else {
+                	//MCTSmostVisitedPruned
                 	if(AImodeB == 1) {
                 		n = b.MCTSmostvisitedpruned(start, blackPrune, blackTime);
                 		
@@ -85,8 +100,14 @@ public class Tester {
                 			}
                 		start = next;
                 		}
-                	if(AImodeB == 2) {
+                	//Random
+                	else if(AImodeB == 2) {
                 		next = new State(start, b.Random(start));
+                    	start = next;
+                	}
+                	//Blitz
+                	else if(AImodeB == 3) {
+                		next = new State(start, b.Blitz(start));
                     	start = next;
                 	}
                 }
@@ -106,7 +127,11 @@ public class Tester {
             x++;
             System.out.println("Game# " + x + "/" + testNumber + " W: " + numWhiteWon + " B: " + numBlackWon);
         }
-
+        
+        /*//Printing whiteCounter (how many times white started)
+        System.out.println("White started " + whiteCounter + " times.");
+		*/
+        
         //Calculating winning percentage of white team
         WhiteBlackPercentage = (numWhiteWon/(testNumber)) * 100;
         
@@ -119,6 +144,9 @@ public class Tester {
         if(AImodeW == 2) {
         	writer.println("AI-mode white: Random moves");
         }
+        if(AImodeW == 3) {
+        	writer.println("AI-mode white: Blitz");
+        }
         if(AImodeB == 1) {
         	writer.println("AI-mode black: MCTSmostVisitedPruned");
         	writer.println("Black pruning factor: " + blackPrune + " , Thinking time: " + blackTime + " ms");
@@ -126,7 +154,10 @@ public class Tester {
         if(AImodeB == 2) {
         	writer.println("AI-mode black: Random moves");
         }
-        writer.println("Number of games is: " + testNumber);
+        if(AImodeB == 3) {
+        	writer.println("AI-mode black: Blitz");
+        }
+        writer.println("Number of games: " + testNumber);
         writer.println("White won: " + numWhiteWon + " times");
         writer.println("Black won: " + numBlackWon + " times");
         writer.println("WhiteBlack percentage is: " + WhiteBlackPercentage + "%");

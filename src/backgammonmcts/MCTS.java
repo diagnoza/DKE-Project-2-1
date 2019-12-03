@@ -87,6 +87,71 @@ public class MCTS {
     	}
     }
     
+    //Plays according to blitz strategy
+    public int[] Blitz(State s) {
+    	//Fill the movelist with all legal moves
+    	s.movehelper(s.getboard(),s.getroll(),s.getwhite());
+    	//If the movelist is empty return  an empty int[]
+    	if (s.getmovelist().isEmpty()) {
+    		return new int[]{};
+    	}
+    	//Else continue with blitz strategy
+    	else {
+	    	int[] tempBoard = s.board.getboard(); //Creates a copy of the board without any changes (moves,etc.)
+	    	int[] blitzScore = new int[s.getmovelist().size()]; //The score of each move, the move with the highest score gets returned.
+	    	
+	    	//Loop that iterates over the movelist
+	    	for(int i=0;i<s.getmovelist().size();i++) {
+	    		//Creating a local copy of the state (That resets every loop)
+	    		State r = new State(s);
+	    		//Applying the current move to the copy of the state
+	    		r.board.applymove(r.getmovelist().get(i));
+	    		
+	    		//If the player is white
+	    		if(r.getwhite()) {
+	    			//Loop that iterates over each moved checker INSIDE the move
+	    			for(int j=1;j<r.getmovelist().get(i).length;j+=2) {
+	    				//If-statement that prevents arrayOutOfBoundsException
+	    				if((r.getmovelist().get(i)[j]) > 0) {
+	    					//If there is a single enemy checker on the place the move is, the score of the move will be incremented
+	    					//according to the position of said checker (checkers closer to enemy's home give more points)
+	    					if(tempBoard[r.getmovelist().get(i)[j]] == -1) {
+	    						blitzScore[i] = blitzScore[i] + 1 * (r.getmovelist().get(i)[j]);
+	    					}
+	    				}
+	    			}
+	    		}
+	    		//If the player is black
+	    		else {
+	    			//Loop that iterates over each moved checker INSIDE the move
+	    			for(int j=1;j<r.getmovelist().get(i).length;j+=2) {
+	    				//If-statement that prevents arrayOutOfBoundsException
+	    				if((r.getmovelist().get(i)[j]) < 26) {
+	    					//If there is a single enemy checker on the place the move is, the score of the move will be incremented
+	    					//according to the position of said checker (checkers closer to enemy's home give more points)
+	    					if(tempBoard[r.getmovelist().get(i)[j]] == 1) {
+	    						blitzScore[i] = blitzScore[i] + 1 * (100-r.getmovelist().get(i)[j]);
+	    					}
+	    				}
+	    			}
+	    		}
+	    	}
+	    	//Creating an integer[] that stores scores and index to compare them with eachother
+	    	int[] max = new int[2];
+	    	max[0] = 0;
+	    	//Loop that goes over all the moves and scores
+	    	for(int i=0;i<blitzScore.length;i++) {
+	    		//Comparing current score to max and updating max if lower than current score
+	    		if(max[0] < blitzScore[i]) {
+	    			max[0] = blitzScore[i];
+	    			max[1] = i;
+	    		}
+	    	}
+	    	//Returning the move with the highest score
+			return s.getmovelist().get(max[1]);
+    	}
+    }
+    
     public double MCTShighestscorepruned (State s, int n) {
         pruningfactor = n;
         long end = System.currentTimeMillis() + 3000;

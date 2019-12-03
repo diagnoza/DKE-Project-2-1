@@ -20,12 +20,13 @@ public class BackgammonMCTS {
     public static void main(String[] args) throws IOException {
         
         Tester t = new Tester();
-        t.test(100, 10, 1, 100, 50, 2, 1); //TestNumber, PruneFactor W, PruneFactor B, ThinkingTime W, ThinkingTime B, AImode W, AImode B
+        t.test(100, 1, 1, 500, 50, 3, 3); //TestNumber, PruneFactor W, PruneFactor B, ThinkingTime W, ThinkingTime B, AImode W, AImode B
         
         //AImode 1 = MCTSmostVisitedPruned
         //AImode 2 = Random moves
+        //AImode 3 = Blitz 
         
-        //*In AImode 2 the pruneFactor and thinkingTime have no effect on gameplay*
+        //*In AImode 2 & 3 the pruneFactor and thinkingTime have no effect on gameplay*
         
         // Board Test
         //Board board = new Board();
