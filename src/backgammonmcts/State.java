@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 
 /**
  *
@@ -24,10 +25,11 @@ public class State {
     boolean white;
     boolean checked;
     int visits;
+    int stage = 0;
     int winner = 0;
     double score;
     Roll roll;
-    double eval;
+    double eval = 0;
     ArrayList<int[]> movelist;
     static double[] risks = new double[]{0.305, 0.319, 0.347, 0.361, 0.361, 0.388, 0.083, 0.083, 0.069, 0.041, 0.027, 0.041, 0.0, 0.0, 0.013, 0.013, 0.0, 0.013, 0.0, 0.013, 0.0, 0.0, 0.0, 0.013};
 
@@ -39,10 +41,11 @@ public class State {
         this.white = w;
         this.checked = false;
         this.visits = v;
+        this.stage = 0;
         this.winner = x;
         this.score = s;
         this.roll = r;
-        this.eval = longeval();
+        //this.eval = longeval();
         this.movelist = new ArrayList<>();
     }
 
@@ -51,23 +54,30 @@ public class State {
         this.white = s.white;
         this.checked = s.checked;
         this.visits = s.visits;
+        this.stage = s.stage;
         this.winner = s.winner;
         this.score = s.score;
         this.roll = s.roll;
         this.eval = s.eval;
-        this.movelist = s.movelist;
+        this.movelist = new ArrayList<>();
+        Iterator<int[]> iterator = movelist.iterator();
+        while (iterator.hasNext()) {
+            this.movelist.add((int[]) iterator.next().clone());
+        }
     }
 
     public State(State s, int[] move) {
         this.board = new Board(s.board.board);
         this.board.applymove(move);
+        this.stage = s.stage;
+        this.stagefinder();
         this.winner = wincheck();
         this.white = (!s.white);
         this.checked = false;
         this.visits = 0;
         this.score = 0;
         this.roll = new Roll();
-        this.eval = longeval();
+        //this.eval = longeval();
         this.movelist = new ArrayList<>();
     }
 
@@ -126,6 +136,28 @@ public class State {
     public void setmovelist(ArrayList<int[]> m) {               //setting the movelist to include Arrays with size other than 4 will lead to NPEs ?????
         this.movelist = m;
     }
+    
+    public long hash () {
+        long result = 0;
+        if (this.white) {
+            for (int i = 0; i < 26; i++) {
+                result = 31 * result + this.board.board[i];
+            }
+            result = 31 * result + this.roll.steps[0];
+            result = 31 * result + this.roll.steps[1];
+            return result;
+        } else {
+            Board temp = new Board(this.board.board);
+            temp.flip();
+            for (int i = 0; i < 26; i++) {
+                result = 31 * result + temp.board[i];
+            }
+            result = 31 * result + this.roll.steps[0];
+            result = 31 * result + this.roll.steps[1];
+            return result;
+        }
+    }
+    
 
     public int wincheck() {                                      //this will return a black win before a white win in the silly case that someone continues to play moves on a board that is already an endstate and manages to get both sides off the board
         boolean whitefound = false;
@@ -139,11 +171,42 @@ public class State {
             }
         }
         if (!blackfound) {
-            return -1;
+            return gammoncheck(false);
         } else if (!whitefound) {
-            return 1;
+            return gammoncheck(true);
         } else {
             return 0;
+        }
+    }
+    
+    public int gammoncheck(boolean white) {
+        int result = 0;
+        if (white) {
+            for (int i = 0; i < 26; i++) {
+                result -= this.board.board[i];
+            }
+            if (result == 15) {
+                if (this.board.board[0] < 0) {
+                    return 3;
+                } else {
+                    return 2;
+                }
+            } else {
+                return 1;
+            }
+        } else {
+            for (int i = 0; i < 26; i++) {
+                result -= this.board.board[i];
+            }
+            if (result == -15) {
+                if (this.board.board[25] > 0) {
+                    return -3;
+                } else {
+                    return -2;
+                }
+            } else {
+                return -1;
+            }
         }
     }
 
@@ -3308,7 +3371,44 @@ public class State {
         }
         return sum;
     }
-
+    
+    public void stagefinder () {
+        int points = 0;
+        int lastw = 25;
+        int lastb = 0;
+        if (this.stage == 0) {
+            if (this.white) {
+                for (int i = 1; i < 25; i++) {
+                    if (this.board.board[i] > 0) {
+                        points++;
+                    }
+                }
+            } else {
+                for (int i = 1; i < 25; i++) {
+                    if (this.board.board[i] < 0) {
+                        points++;
+                    }
+                }
+            }
+            if (points > 7) {
+                this.stage++;
+            }
+        } else if (this.stage == 1) {
+            for (int i = 1; i < 26; i++) {
+                if (this.board.board[i] > 0) {
+                    lastw = i;
+                }
+            }
+            for (int i = 24; i > -1; i--) {
+                if (this.board.board[i] < 0) {
+                    lastb = i;
+                }
+            }
+            if (lastb > lastw) {
+                this.stage++;
+            }
+        }
+    }
 }
 
 

@@ -16,48 +16,48 @@ import java.util.Collections;
  */
 public class Board {
     public int[] board;
-    public BGAList black;
-    public BGAList white;
+    //public BGAList black;
+    //public BGAList white;
     public Board () {                                       //constructors
         board = new int[26];
         board[1] = -2; board[6] = 5; board[8] = 3; board[12] = -5; board[13] = 5; board[17] = -3; board[19] = -5; board[24] = 2;
-        black = new BGAList();
-        Collections.addAll(black, 4, 1, 12, 17, 19);
-        white = new BGAList();
-        Collections.addAll(white, 4, 24, 13, 8, 6);
+        //black = new BGAList();
+        //Collections.addAll(black, 4, 1, 12, 17, 19);
+        //white = new BGAList();
+        //Collections.addAll(white, 4, 24, 13, 8, 6);
     }
     public Board (int[] b) {                                //don't call this wth arrays of sizes other than 26 or we get Null Pointer Exceptions.
         this.board = b.clone();
-        black = new BGAList();
-        white = new BGAList();
-        for (int i = 0; i < 26; i++) {
-            if (board[i] < 0) {
-                black.add(i);
-            } else if (board[i] > 0) {
-                white.add(i);
-            }
-        }
-        black.add(0, black.size());
-        white.add(0, white.size());
-        white.whitesort();
+        //black = new BGAList();
+        //white = new BGAList();
+        //for (int i = 0; i < 26; i++) {
+        //    if (board[i] < 0) {
+        //        black.add(i);
+        //    } else if (board[i] > 0) {
+        //        white.add(i);
+        //    }
+        //}
+        //black.add(0, black.size());
+        //white.add(0, white.size());
+        //white.whitesort();
     }
     public int[] getboard () {                              //getters and setters
         return this.board;
     }
     public void setboard (int[] b) {                        //don't call this with arrays of sizes other than 26 or we get Null Pointer Exceptions.
         this.board = b.clone();
-        black.clear();
-        white.clear();
-        for (int i = 0; i < 26; i++) {
-            if (board[i] < 0) {
-                black.add(i);
-            } else if (board[i] > 0) {
-                white.add(i);
-            }    
-        }
-        black.add(0, black.size());
-        white.add(0, white.size());
-        white.whitesort();
+    //    black.clear();
+    //    white.clear();
+    //    for (int i = 0; i < 26; i++) {
+    //        if (board[i] < 0) {
+    //            black.add(i);
+    //        } else if (board[i] > 0) {
+    //            white.add(i);
+    //        }    
+    //    }
+    //    black.add(0, black.size());
+    //    white.add(0, white.size());
+    //    white.whitesort();
     }
     public void applymove (int[] m) {
         if (m.length == 0) {
@@ -93,6 +93,14 @@ public class Board {
                     } 
                 }
             }
+        }
+    }
+    public void flip () {
+        int n;
+        for (int i = 0; i < 13; i++) {
+            n = this.board[i];
+            this.board[i] = this.board[25 - i];
+            this.board[25 - i] = n;
         }
     }
     

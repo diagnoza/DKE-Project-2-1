@@ -77,6 +77,33 @@ public class Node {
             }
         }
     }
+    public void evalchildren(double a, double b, double c, double d, double e, double f, double g, double h) {
+        for (int i = 0; i < this.children.size(); i++) {
+            switch (this.children.get(i).state.stage) {
+                case 0:
+                    this.children.get(i).state.eval = Evals.earlyeval(this.children.get(i).state, a);
+                    if (b != 0) {
+                        this.children.get(i).state.eval += Evals.blitzeval(this.children.get(i).state, b);
+                    }   if (c != 0) {
+                        this.children.get(i).state.eval += Evals.primeeval(this.children.get(i).state, c);
+                    }   if (d != 0) {
+                        this.children.get(i).state.eval += Evals.anchoreval(this.children.get(i).state, d);
+                    }   break;
+                case 1:
+                    this.children.get(i).state.eval = Evals.longeval(this.children.get(i).state, e);
+                    if (f != 0) {
+                        this.children.get(i).state.eval += Evals.blitzeval(this.children.get(i).state, f);
+                    }   if (g != 0) {
+                        this.children.get(i).state.eval += Evals.primeeval(this.children.get(i).state, g);
+                    }   if (h != 0) {
+                        this.children.get(i).state.eval += Evals.anchoreval(this.children.get(i).state, h);
+                    }   break;
+                default:
+                    this.children.get(i).state.eval = Evals.shorteval(this.children.get(i).state);
+                    break;
+            }
+        }
+    }
     public void prunenode() {
         if (this.children.size() > MCTS.pruningfactor) {
             if (this.state.white) {

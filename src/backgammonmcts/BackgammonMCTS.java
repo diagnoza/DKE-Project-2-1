@@ -5,8 +5,17 @@
  */
 package backgammonmcts;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  *
@@ -17,10 +26,58 @@ public class BackgammonMCTS {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         
-        Tester t = new Tester();
-        t.test(10, 10, 1, 6000, 3000);
+        
+        //HashMap<Long, Memory> hash = new HashMap<>();
+        //Memory m1 = new Memory(2,2d);
+        //Memory m2 = new Memory(5,5d);
+        //hash.put(1L, m1);
+        //hash.put(2L, m2);
+        //try {
+        //    FileOutputStream f = new FileOutputStream(new File("hash.ser"));
+        //    ObjectOutputStream o = new ObjectOutputStream(f);
+        //    o.writeObject(hash);
+        //    o.close();
+        //    f.close();
+        //} catch (FileNotFoundException e) {
+        //    System.out.println("File not found");
+        //} catch (IOException e) {
+        //    System.out.println("Error initializing stream");
+        //    e.printStackTrace();
+        //}
+        
+        /*  HASHTABLE TEST
+        try {
+            FileInputStream f = new FileInputStream(new File("hash.ser"));
+            ObjectInputStream o = new ObjectInputStream(f);
+            HashMap<Long, Memory> hash = (HashMap) o.readObject();
+            o.close();
+            f.close();
+            Memory m1 = hash.get(1L);
+            System.out.println("Visits to m1:" +m1.visits);
+            System.out.println("Visits to m2:" +hash.get(2L).visits);
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found");
+        } catch (IOException e) {
+            System.out.println("Error initializing stream");
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            System.out.println("Class not found");
+        }
+        */
+        
+        /* MULTITHREAD TEST
+        MCTS a = new MCTS();
+        Board b = new Board();
+        Roll r = new Roll(3,5);
+        State test = new State(b, true, 0, 0, 0, r);
+        int move = a.MCTS_hsp_rootparallel(test, 10, 3000);
+        System.out.println("The MCTS recommends move " +Arrays.toString(a.tree.root.state.movelist.get(move)) +".");
+        */
+    //}
+        //Tester t = new Tester();
+        //t.test(10, 10, 1, 6000, 3000);
         // Board Test
         //Board board = new Board();
         //System.out.println(board.black);
@@ -319,6 +376,68 @@ public class BackgammonMCTS {
         
         */
 
+        //ENTIRE GAME TEST MULTI VS TRUE RANDOM
+        Board test;
+        Roll r;
+        State start;
+        State next;
+        boolean white;
+        int whitewins = 0;
+        int blackwins = 0;
+        int n;
+        MCTS w = new MCTS();
+        w.setpruningprofile(1.0, 1.0, 0, 0, 1.0, 1.0, 0, 0);
+        MCTS b = new MCTS();
+        for (int i = 0; i<100; i++) {
+            test = new Board();
+            r = new Roll();
+            while (r.steps[0] == r.steps[1]) {
+                r = new Roll();
+            }
+            white = (r.steps[0] > r.steps[1]);
+            start = new State(test, white, 0, 0, 0, r);
+            n = 0;
+            next = new State();
+            while (start.wincheck() == 0) {
+                if (start.white) {
+                    n = w.MCTS_hsp_rootparallel(start, 3, 200);
+                    System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
+                    if (w.tree.root.state.movelist.isEmpty()) {
+                        System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
+                        next = new State(start, new int[]{});
+                    } else {
+                        System.out.println(((start.white) ? "White" : "Black") + " plays " +Arrays.toString(w.tree.root.state.movelist.get(n)) +".");
+                        next = new State(start, w.tree.root.state.movelist.get(n));
+                    }
+                start = next;
+                } else {
+                    n = b.MCTSmostvisitedpruned(start, 1, 100);
+                    System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
+                    if (b.tree.root.state.movelist.isEmpty()) {
+                        System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
+                        next = new State(start, new int[]{});
+                    } else {
+                        n = ThreadLocalRandom.current().nextInt(0, b.tree.root.state.movelist.size());
+                        System.out.println(((start.white) ? "White" : "Black") + " plays " +Arrays.toString(b.tree.root.state.movelist.get(n)) +".");
+                        next = new State(start, b.tree.root.state.movelist.get(n));
+                    }
+                start = next;
+                }
+            }
+            if (start.wincheck() > 0) {
+                System.out.println("White wins the game!");
+                whitewins++;
+            } else {
+                System.out.println("Black wins the game!");
+                blackwins++;
+            }
+        //System.out.println("Total nodes expanded for White: " +w.totalnodesexpanded);
+        //System.out.println("Rollouts completed for White: " +w.totalrollouts);
+        //System.out.println("Total nodes expanded for Black: " +b.totalnodesexpanded);
+        //System.out.println("Rollouts completed for Black: " +b.totalrollouts);
+        System.out.println("Out of 100 matches, White won " + whitewins + " times, and Black won " + blackwins + " times.");
+    
+        }
         //for (int i = 0; i < 10000000; i++) {
                
         //    teststate.movehelper(test, r, false);
@@ -332,8 +451,9 @@ public class BackgammonMCTS {
             
             
         
-    }
     
+    
+    }
 }
 
 
