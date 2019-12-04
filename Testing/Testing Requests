@@ -1,0 +1,13 @@
+If you make any updates to the MCTS Algorithms or create new eval functions / pruning methods / whatever and you want somebody to
+run tests on it, put your requests in here. Obviously be as specific as needed, e.g.:
+
+Pruned MCTS with return most visited, 3 seconds thinking vs. Pruned MCTS with return most visited, 3 seconds thinking
+Black with Pruning factor 1, 3, 7, 10                    vs. White with constant Pruning factor 5
+
+or something like this.
+If you have time to kill or you're leaving your PC (because you're going out for the night, going on an appartment cleaning binge,
+going to the gym, whatever), check if there are testing requests and set your PC to testing before you go.
+That way we can get way more results in. This will especially be relevant in the last week, when we need loads of data to have good
+visualizations for the presentation. :)
+
+When you have Testing Results to share, just upload them into the Backgaymmon/Testing folder.

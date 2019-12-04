@@ -11,6 +11,7 @@ import java.util.Comparator;
 /**
  *
  * @author Laurin
+ * semi- @author Rudy
  */
 public class MCTS {
 

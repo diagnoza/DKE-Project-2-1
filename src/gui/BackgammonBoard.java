@@ -57,12 +57,12 @@ public class BackgammonBoard extends JComponent {
         g.drawRect(795, 45, 100, 285);
         g.drawRect(795, 330, 100, 285);
 
-        g.setColor(Color.decode("#5B0E2D"));
-        g.fillRect(1000, 30, 300, 305);
-
-
-        g.setColor(Color.decode("#BC8F8F"));
-        g.fillRect(1000, 335, 300, 305);
+        // g.setColor(Color.decode("#5B0E2D"));
+        // g.fillRect(1000, 30, 300, 305);
+        //
+        //
+        // g.setColor(Color.decode("#BC8F8F"));
+        // g.fillRect(1000, 335, 300, 305);
 
         for (int i = 0; i < triangle.length; i++) {
             if (i >= 12) {
@@ -89,4 +89,4 @@ public class BackgammonBoard extends JComponent {
 
     }
 
-}	
+}
