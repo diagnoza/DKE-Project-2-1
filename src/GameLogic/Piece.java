@@ -1,8 +1,6 @@
 package GameLogic;
 
 
-import org.jetbrains.annotations.NotNull;
-
 public class Piece{
 
     private String colour;
@@ -11,7 +9,7 @@ public class Piece{
         return colour;
     }
 
-    public Piece(@NotNull String colour) throws IllegalColourException{
+    public Piece(String colour) throws IllegalColourException{
 
         if(colour.equals("white") || colour.equals("black"))
             this.colour = colour;

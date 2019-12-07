@@ -20,7 +20,7 @@ public class BackgammonMCTS {
     public static void main(String[] args) throws IOException {
         
         Tester t = new Tester();
-        t.test(10, 10, 1, 6000, 3000);
+        t.test(1, 1, 1, 50, 50);
         // Board Test
         //Board board = new Board();
         //System.out.println(board.black);

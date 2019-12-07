@@ -21,14 +21,14 @@ public class Tester {
         double numWhiteWon = 0;
         double numBlackWon = 0;
         double WhiteBlackPercentage;
-        File file = new File("test", ".txt");
+        File file = new File("test.txt");
         
-        //Check if file exists
-        //Path path = Files.createTempFile("test", ".txt");
-        //if (!Files.exists(path)) {
-            //Creating file to store data
-        //    file = new File("test.txt");
-        //}
+//        Check if file exists
+//        Path path = Files.createTempFile("test", ".txt");
+//        if (!Files.exists(path)) {
+//            Creating file to store data
+//            file = new File("test.txt");
+//        }
 
         //Creating writer to write data to file
         PrintWriter writer = new PrintWriter(new FileWriter(file, true));  //Does not rewrite file, adds to existing data 
