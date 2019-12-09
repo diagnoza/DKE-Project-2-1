@@ -79,6 +79,7 @@ public class Node {
     }
     public void evalchildren(double a, double b, double c, double d, double e, double f, double g, double h) {
         for (int i = 0; i < this.children.size(); i++) {
+            this.children.get(i).state.white = !this.children.get(i).state.white;
             switch (this.children.get(i).state.stage) {
                 case 0:
                     this.children.get(i).state.eval = Evals.earlyeval(this.children.get(i).state, a);
@@ -102,27 +103,28 @@ public class Node {
                     this.children.get(i).state.eval = Evals.shorteval(this.children.get(i).state);
                     break;
             }
+            this.children.get(i).state.white = !this.children.get(i).state.white;
         }
     }
-    public void prunenode() {
-        if (this.children.size() > MCTS.pruningfactor) {
-            if (this.state.white) {
+    public void prunenode(int n) {
+        if (this.children.size() > n) {
+            if (!this.state.white) {
                 this.children.sort(Comparator.comparingDouble(a -> a.state.eval));
             } else {
                 this.children.sort(Comparator.comparingDouble((Node a) -> a.state.eval).reversed());
             }
-            this.children.subList(MCTS.pruningfactor, this.children.size()).clear();
+            this.children.subList(n, this.children.size()).clear();
         }
     }
-    public void prunewithrandomness() {
-        if (this.children.size() > MCTS.pruningfactor + MCTS.randomfactor) {
-            if (this.state.white) {
+    public void prunewithrandomness(int n, int m) {
+        if (this.children.size() > n + m) {
+            if (!this.state.white) {
                 this.children.sort(Comparator.comparingDouble(a -> a.state.eval));
             } else {
                 this.children.sort(Comparator.comparingDouble((Node a) -> a.state.eval).reversed());
             }
-            Collections.shuffle(this.children.subList(MCTS.pruningfactor, MCTS.pruningfactor + MCTS.randomfactor));
-            this.children.subList(MCTS.pruningfactor + MCTS.randomfactor, this.children.size()).clear();
+            Collections.shuffle(this.children.subList(n, n+m));
+            this.children.subList(n+m, this.children.size()).clear();
         }
     }
     public Node getRandomChild() {

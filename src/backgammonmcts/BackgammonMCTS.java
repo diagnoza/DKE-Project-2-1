@@ -385,8 +385,9 @@ public class BackgammonMCTS {
         int whitewins = 0;
         int blackwins = 0;
         int n;
+        boolean first;
         MCTS w = new MCTS();
-        w.setpruningprofile(1.0, 1.0, 0, 0, 1.0, 1.0, 0, 0);
+        w.setpruningprofile(4.0, 5.0, 2.0, 0.0, 4.0, 5.0, 2.0, 0.0);
         MCTS b = new MCTS();
         for (int i = 0; i<100; i++) {
             test = new Board();
@@ -395,33 +396,45 @@ public class BackgammonMCTS {
                 r = new Roll();
             }
             white = (r.steps[0] > r.steps[1]);
+            first = white;
             start = new State(test, white, 0, 0, 0, r);
             n = 0;
             next = new State();
             while (start.wincheck() == 0) {
                 if (start.white) {
-                    n = w.MCTS_hsp_rootparallel(start, 3, 200);
-                    System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
-                    if (w.tree.root.state.movelist.isEmpty()) {
-                        System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
-                        next = new State(start, new int[]{});
+                    //n = w.MCTS_hsp_rootparallel(start, 1, 450);
+                    //n = w.MCTSmostvisitedpruned(start, 1, 150);
+                    n = w.MCTS_mvp_rootparallel(start, 1, 150);
+                    //n = w.MCTShighestscorepruned(start, 1, 450);
+                    //n = w.MCTSmostvisited(start, 150);
+                    //n = w.MCTShighestscore(start, 450);
+                    //System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
+                    if (first) {
+                        int[] move = FirstMove.opening(r, true);
+                        next = new State(start, move);
+                        first = false;
                     } else {
-                        System.out.println(((start.white) ? "White" : "Black") + " plays " +Arrays.toString(w.tree.root.state.movelist.get(n)) +".");
-                        next = new State(start, w.tree.root.state.movelist.get(n));
+                        if (w.tree.root.state.movelist.isEmpty()) {
+                            //System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
+                            next = new State(start, new int[]{});
+                        } else {
+                            //System.out.println(((start.white) ? "White" : "Black") + " plays " +Arrays.toString(w.tree.root.state.movelist.get(n)) +".");
+                            next = new State(start, w.tree.root.state.movelist.get(n));
+                        }
                     }
-                start = next;
+                    start = next;
                 } else {
-                    n = b.MCTSmostvisitedpruned(start, 1, 100);
-                    System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
+                    n = b.MCTSmostvisited(start, 100);
+                    //System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
                     if (b.tree.root.state.movelist.isEmpty()) {
-                        System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
+                        //System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
                         next = new State(start, new int[]{});
                     } else {
                         n = ThreadLocalRandom.current().nextInt(0, b.tree.root.state.movelist.size());
-                        System.out.println(((start.white) ? "White" : "Black") + " plays " +Arrays.toString(b.tree.root.state.movelist.get(n)) +".");
+                        //System.out.println(((start.white) ? "White" : "Black") + " plays " +Arrays.toString(b.tree.root.state.movelist.get(n)) +".");
                         next = new State(start, b.tree.root.state.movelist.get(n));
                     }
-                start = next;
+                    start = next;
                 }
             }
             if (start.wincheck() > 0) {
@@ -435,9 +448,19 @@ public class BackgammonMCTS {
         //System.out.println("Rollouts completed for White: " +w.totalrollouts);
         //System.out.println("Total nodes expanded for Black: " +b.totalnodesexpanded);
         //System.out.println("Rollouts completed for Black: " +b.totalrollouts);
-        System.out.println("Out of 100 matches, White won " + whitewins + " times, and Black won " + blackwins + " times.");
     
         }
+        System.out.println("Out of 100 matches, White won " + whitewins + " times, and Black won " + blackwins + " times.");
+        
+        
+        
+        //Board b = new Board();
+        //Roll r = new Roll(4,2);
+        //State start = new State(b, true, 0, 0, 0, r);
+        //MCTS w = new MCTS();
+        //int n = w.MCTS_mvp_rootparallel(start, 2, 500);
+        
+        
         //for (int i = 0; i < 10000000; i++) {
                
         //    teststate.movehelper(test, r, false);
@@ -449,9 +472,43 @@ public class BackgammonMCTS {
         //for (int i = 0; i < teststate.movelist.size(); i++) {
         //    System.out.println(Arrays.toString(teststate.movelist.get(i)));
             
-            
+        /*Component Testing
         
-    
+        int[] b = new int[]{0,0,0,0,-2,3,0,0,1,1,0,3,0,0,0,0,0,0,-2,0,3,1,1,0,-1,0};    //should evaluate WAY in favor of black
+        int[] c = new int[]{0,1,0,0,-1,-1,0,0,0,3,2,0,0,0,0,-2,-3,0,0,-1,0,2,0,0,0,0};  //should evaluate slightly in favor of white
+        Board boardb = new Board(b);
+        Board boardc = new Board(c);
+        State boardbwhite = new State(boardb, true, 0, 0, 0.0, new Roll(3,2));
+        State boardbblack = new State(boardb, false, 0, 0, 0.0, new Roll(3,2));
+        State boardcwhite = new State(boardc, true, 0, 0, 0.0, new Roll(2,4));
+        State boardcblack = new State(boardc, false, 0, 0, 0.0, new Roll(2,4));
+        Node one = new Node(boardbwhite);
+        Node two = new Node(boardbblack);
+        Node three = new Node(boardcwhite);
+        Node four = new Node(boardcblack);
+        //System.out.println("Shorteval for the first State - white to play - returns: " + Evals.shorteval(boardbwhite));
+        //System.out.println("Longeval for the first State - white to play - returns: " + Evals.longeval(boardbwhite, 1.0));
+        //System.out.println("Shorteval for the first State - black to play - returns: " + Evals.shorteval(boardbblack));
+        //System.out.println("Longeval for the first State - black to play - returns: " + Evals.longeval(boardbblack, 1.0));
+        //System.out.println("Shorteval for the second State - white to play - returns: " + Evals.shorteval(boardcwhite));
+        //System.out.println("Shorteval for the second State - black to play - returns: " + Evals.shorteval(boardcblack));
+        one.expandnode();
+        one.evalchildren(1.0, 0, 0, 0, 1.0, 0, 0, 0);
+        for (int i = 0; i < one.children.size(); i++) {
+            System.out.println("The move " + Arrays.toString(boardbwhite.movelist.get(i)) + " leads to a State evaluated at " + one.children.get(i).state.eval + ".");
+        }
+        System.out.println("To confirm: The evaluation of the child with Siblingnumber 1 is " +one.children.get(1).state.eval + ".");
+        if (one.children.get(1).state.white) {
+            System.out.println("The associated state is white.");
+        } else {
+            System.out.println("The associated state is black.");
+        }
+        one.prunenode(10);
+        System.out.println("After pruning, the following moves are considered:");
+        for (int i = 0; i<10; i++) {
+            System.out.println("The move " + Arrays.toString(boardbwhite.movelist.get(one.children.get(i).getsiblingnumber())) +", which leads to a State evaluated at " + one.children.get(i).state.eval + ".");
+        }
+        */
     
     }
 }

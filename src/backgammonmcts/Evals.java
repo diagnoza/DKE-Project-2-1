@@ -15,11 +15,18 @@ public class Evals {
     
     public static int shorteval (State s) {
         int sum = 0;
+        //System.out.println("Sum initialized to zero.");
         for (int i = 0; i < 26; i++) {
             if (s.board.board[i] > 0) {
+                //System.out.println(s.board.board[i] + " white pieces found on position " + i + ".");
                 sum = sum - (s.board.board[i] * i);
+                //System.out.println("Reducing sum by " + (s.board.board[i] * i) +".");
+                //System.out.println("Sum is now " +sum + ".");
             } else if (s.board.board[i] < 0) {
+                //System.out.println(-(s.board.board[i]) + " black pieces found on position " + i + ".");
                 sum = sum - (s.board.board[i] * (25-i));
+                //System.out.println("Increasing sum by " + (-(s.board.board[i] * (25-i))) +".");
+                //System.out.println("Sum is now " +sum + ".");
             }
         }
         return sum;
@@ -51,9 +58,11 @@ public class Evals {
     
     public static double earlyeval (State s, double n) {
         double sum = s.shorteval();
+        //System.out.println("Initializing sum to shorteval, which is " + sum + ".");
         for (int i = 1; i < 25; i++) {
             if (s.white) {
                 if ((s.board.board[i] == 1) && ((i > 12) || (i < 7))) {
+                    //System.out.println("Vulnerable Blot found at position " + i + ".");
                     for (int j = 1; i - j > -1; j++) {
                         if (s.board.board[i-j] < 0) {
                             sum = sum - (risks[j-1] * (25-i) * n);

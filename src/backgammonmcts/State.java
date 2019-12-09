@@ -24,10 +24,10 @@ public class State {
     Board board;
     boolean white;
     boolean checked;
-    int visits;
+    int visits = 0;
     int stage = 0;
     int winner = 0;
-    double score;
+    double score = 0;
     Roll roll;
     double eval = 0;
     ArrayList<int[]> movelist;
@@ -2530,6 +2530,7 @@ public class State {
                 this.movelist.add(new int[]{25, 25-s});
                 return;
             }
+            return;
         } else {
             for (int i = 25; i > 0; i--) {
                 if ((i > 6) && (b.board[i] > 0)) {
@@ -2636,7 +2637,7 @@ public class State {
             if ((!first.isEmpty()) && (first.get(0) == 25)) {
                 tempa = 100;
                 for (int i = 0; i < sbreak; i++) {
-                    if (second.get(i) == tempa) {
+                    if (second.get(i) == 25) {
                         tempa = 100;
                     } else {
                         tempa = second.get(i);
@@ -2650,7 +2651,7 @@ public class State {
             if ((!second.isEmpty()) &&(second.get(0)) == 25) {
                 tempa = 100;
                 for (int i = 0; i < fbreak; i++) {
-                    if (first.get(i) == tempa) {
+                    if (first.get(i) == 25) {
                         tempa = 100;
                     } else {
                         tempa = first.get(i);
@@ -2886,6 +2887,7 @@ public class State {
                 this.movelist.add(new int[]{0, s});
                 return;
             }
+            return;
         } else {
             for (int i = 0; i < 25; i++) {
                 if ((i < 19) && (b.board[i] < 0)) {
@@ -2988,11 +2990,11 @@ public class State {
         int tempa = 100;
         int tempb = 100;
         int tempc = 100;
-        if (bar == 1) {
+        if (bar == -1) {
             if ((!first.isEmpty()) && (first.get(0) == 0)) {
                 tempa = 100;
                 for (int i = 0; i < sbreak; i++) {
-                    if (second.get(i) == tempa) {
+                    if (second.get(i) == 0) {
                         tempa = 100;
                     } else {
                         tempa = second.get(i);
@@ -3006,7 +3008,7 @@ public class State {
             if ((!second.isEmpty()) && (second.get(0)) == 0) {
                 tempa = 100;
                 for (int i = 0; i < fbreak; i++) {
-                    if (first.get(i) == tempa) {
+                    if (first.get(i) == 0) {
                         tempa = 100;
                     } else {
                         tempa = first.get(i);
