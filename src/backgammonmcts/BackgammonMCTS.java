@@ -387,7 +387,7 @@ public class BackgammonMCTS {
         int n;
         boolean first;
         MCTS w = new MCTS();
-        w.setpruningprofile(4.0, 5.0, 2.0, 0.0, 4.0, 5.0, 2.0, 0.0);
+        w.setpruningprofile(1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0);
         MCTS b = new MCTS();
         for (int i = 0; i<100; i++) {
             test = new Board();
@@ -403,10 +403,10 @@ public class BackgammonMCTS {
             while (start.wincheck() == 0) {
                 if (start.white) {
                     //n = w.MCTS_hsp_rootparallel(start, 1, 450);
-                    //n = w.MCTSmostvisitedpruned(start, 1, 150);
-                    n = w.MCTS_mvp_rootparallel(start, 1, 150);
+                    n = w.MCTSmostvisitedpruned(start, 1, 50);
+                    //n = w.MCTS_mvp_rootparallel(start, 1, 150);
                     //n = w.MCTShighestscorepruned(start, 1, 450);
-                    //n = w.MCTSmostvisited(start, 150);
+                    //n = w.MCTSmostvisited(start, 50);
                     //n = w.MCTShighestscore(start, 450);
                     //System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
                     if (first) {
@@ -424,7 +424,7 @@ public class BackgammonMCTS {
                     }
                     start = next;
                 } else {
-                    n = b.MCTSmostvisited(start, 100);
+                    n = b.MCTSmostvisited(start, 10);
                     //System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
                     if (b.tree.root.state.movelist.isEmpty()) {
                         //System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
@@ -453,6 +453,44 @@ public class BackgammonMCTS {
         System.out.println("Out of 100 matches, White won " + whitewins + " times, and Black won " + blackwins + " times.");
         
         
+        /*
+        //BACKPROPAGATE TEST
+        int[] inta = new int[]{-1, 0, -13, -1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] intb = new int[]{-1, 0, -13, -1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] intc = new int[]{-2, 0, -13, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] intd = new int[]{-2, 0, -13, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] inte = new int[]{-2, 0, -13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        Board boarda = new Board(inta);
+        Board boardb = new Board(intb);
+        Board boardc = new Board(intc);
+        Board boardd = new Board(intd);
+        Board boarde = new Board(inte);
+        Roll rolla = new Roll(5,5);
+        Roll rollb = new Roll(1,1);
+        Roll rollc = new Roll(3,3);
+        Roll rolld = new Roll(4,6);
+        Roll rolle = new Roll(1,2);
+        State statea = new State(boarda, false, 0, 0, 0.0, rolla);
+        State stateb = new State(boardb, true, 0, 0, 0.0, rollb);
+        State statec = new State(boardc, false, 0, 0, 0.0, rollc);
+        State stated = new State(boardd, true, 0, 0, 0.0, rolld);
+        State statee = new State(boarde, false, 0, 0, 0.0, rolle);
+        Node nodea = new Node(statea);
+        Node nodeb = new Node(stateb, nodea, 0);
+        Node nodec = new Node(statec, nodeb, 0);
+        Node noded = new Node(stated, nodec, 0);
+        Node nodee = new Node(statee, noded, 0);
+        statee.winner = statee.wincheck();
+        System.out.println("Winner field for the final state is: "+statee.winner+".");
+        MCTS m = new MCTS();
+        m.backpropagate(nodee, statee.winner);
+        System.out.println("State a Visits = " +statea.visits+ ", State a Score = " +statea.score+ ".");
+        System.out.println("State b Visits = " +stateb.visits+ ", State a Score = " +stateb.score+ ".");
+        System.out.println("State c Visits = " +statec.visits+ ", State a Score = " +statec.score+ ".");
+        System.out.println("State d Visits = " +stated.visits+ ", State a Score = " +stated.score+ ".");
+        System.out.println("State e Visits = " +statee.visits+ ", State a Score = " +statee.score+ ".");
+        //System.out.println(statee.wincheck());
+        */
         
         //Board b = new Board();
         //Roll r = new Roll(4,2);
