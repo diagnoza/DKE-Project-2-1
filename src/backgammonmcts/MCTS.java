@@ -6,9 +6,14 @@
 package backgammonmcts;
 
 import static java.lang.Math.abs;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -60,6 +65,7 @@ public class MCTS {
     public int MCTShighestscore (State s, int time) {
         long end = System.currentTimeMillis() + time;
         tree = new Tree(new Node(s));
+        Node winner;
         //int debugb = 0;
         while (System.currentTimeMillis() < end) {
             Node current = selectnode(tree.root);
@@ -73,7 +79,11 @@ public class MCTS {
             //System.out.println("Finished rollout number " +debugb+ ", winner is " + (result == 1 ? "White" : "Black") + ".");
             backpropagate(rollout, result);
         }
-        Node winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.score));
+        if (s.white) {
+            winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.score));
+        } else {
+            winner = Collections.min(tree.root.children, Comparator.comparing(c -> c.state.score));
+        }
         //System.out.println("The winning node was visited " +winner.state.visits+ " times, and has a score of " +winner.state.score +".");
         return winner.siblingnumber;
     }
@@ -107,6 +117,7 @@ public class MCTS {
         pruningfactor = n;
         long end = System.currentTimeMillis() + time;
         tree = new Tree(new Node(s));
+        Node winner;
         //int debugb = 0;
         while (System.currentTimeMillis() < end) {
             Node current = selectnode(tree.root);
@@ -122,7 +133,11 @@ public class MCTS {
             //System.out.println("Finished rollout number " +debugb+ ", winner is " + (result == 1 ? "White" : "Black") + ".");
             backpropagate(rollout, result);
         }
-        Node winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.score));   
+        if (s.white) {
+            winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.score));
+        } else {
+            winner = Collections.min(tree.root.children, Comparator.comparing(c -> c.state.score));
+        } 
         //System.out.println("The winning node was visited " +winner.state.visits+ " times, and has a score of " +winner.state.score +".");
         return winner.siblingnumber;
     }
@@ -130,6 +145,7 @@ public class MCTS {
     public int MCTS_hsp_rootparallel (State s, int n, int time) throws InterruptedException {
         pruningfactor = n;
         tree = new Tree(new Node(s));
+        Node winner;
         MultiMCTS mmctsa = new MultiMCTS(s, time, 1, n);
         MultiMCTS mmctsb = new MultiMCTS(s, time, 2, n);
         MultiMCTS mmctsc = new MultiMCTS(s, time, 3, n);
@@ -174,7 +190,62 @@ public class MCTS {
                     mmctsg.threadtree.root.children.get(i).state.score +
                     mmctsh.threadtree.root.children.get(i).state.score;
         }
-        Node winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.score));
+        if (s.white) {
+            winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.score));
+        } else {
+            winner = Collections.min(tree.root.children, Comparator.comparing(c -> c.state.score));
+        }
+        return winner.siblingnumber;
+    }
+    
+    public int MCTS_mvp_vcrp (State s, int n, int t, int time) throws InterruptedException {
+        pruningfactor = n;
+        tree = new Tree(new Node(s));
+        ExecutorService threadPool = Executors.newFixedThreadPool(t);
+        ArrayList<MultiMCTS> list = new ArrayList<>();
+        for (int i = 0; i < t; i++) {
+            list.add(new MultiMCTS(s, time, i, n));
+        }
+        for (int i = 0; i < t; i++) {
+            threadPool.submit(list.get(i));
+        }
+        threadPool.shutdown();
+        threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+        tree.root.expandnode();
+        for (int i = 0; i < t; i++) {
+            for (int j = 0; j < (pruningfactor < tree.root.children.size() ? pruningfactor : tree.root.children.size()); j++) {
+                tree.root.children.get(j).state.visits += list.get(i).threadtree.root.children.get(j).state.visits;
+            }
+        }
+        Node winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.visits));
+        return winner.siblingnumber;
+    }
+    
+    public int MCTS_hsp_vcrp (State s, int n, int t, int time) throws InterruptedException {
+        pruningfactor = n;
+        tree = new Tree(new Node(s));
+        Node winner;
+        ExecutorService threadPool = Executors.newFixedThreadPool(t);
+        ArrayList<MultiMCTS> list = new ArrayList<>();
+        for (int i = 0; i < t; i++) {
+            list.add(new MultiMCTS(s, time, i, n));
+        }
+        for (int i = 0; i < t; i++) {
+            threadPool.submit(list.get(i));
+        }
+        threadPool.shutdown();
+        threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+        tree.root.expandnode();
+        for (int i = 0; i < t; i++) {
+            for (int j = 0; j < (pruningfactor < tree.root.children.size() ? pruningfactor : tree.root.children.size()); j++) {
+                tree.root.children.get(j).state.score += list.get(i).threadtree.root.children.get(j).state.score;
+            }
+        }
+        if (s.white) {
+            winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.score));
+        } else {
+            winner = Collections.min(tree.root.children, Comparator.comparing(c -> c.state.score));
+        }
         return winner.siblingnumber;
     }
     
