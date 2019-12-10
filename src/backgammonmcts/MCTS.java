@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -249,6 +250,14 @@ public class MCTS {
         return winner.siblingnumber;
     }
     
+    public int fullrandom (State s) {
+        tree = new Tree(new Node(s));
+        Node current = tree.root;
+        current.expandnode();
+        int n = ThreadLocalRandom.current().nextInt(0, tree.root.children.size());
+        return n;
+    }
+    
     public int MCTS_mvp_rootparallel (State s, int n, int time) throws InterruptedException {
         pruningfactor = n;
         tree = new Tree(new Node(s));
@@ -428,6 +437,15 @@ public class MCTS {
             }
             temp = temp.parent;
         }
+    }
+    
+    public int lightrollout(Node n) {
+        Node temp = n;
+        while (temp.state.winner == 0) {
+            temp.expandnode();
+            temp = temp.getRandomChild();
+        }
+        return temp.state.winner;
     }
     
     public int randomplay(Node n) {

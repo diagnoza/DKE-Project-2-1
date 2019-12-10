@@ -403,7 +403,7 @@ public class BackgammonMCTS {
             while (start.wincheck() == 0) {
                 if (start.white) {
                     //n = w.MCTS_hsp_rootparallel(start, 1, 450);
-                    //n = w.MCTSmostvisitedpruned(start, 1, 50);
+                    n = w.MCTSmostvisitedpruned(start, 1, 50);
                     //n = w.MCTS_mvp_rootparallel(start, 1, 50);
                     //n = w.MCTS_mvp_vcrp(start, 1, 6, 150);
                     //n = w.MCTShighestscorepruned(start, 1, 50);
@@ -425,7 +425,7 @@ public class BackgammonMCTS {
                     }
                     start = next;
                 } else {
-                    n = b.MCTSmostvisited(start, 10);
+                    n = b.fullrandom(start);
                     //System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
                     if (b.tree.root.state.movelist.isEmpty()) {
                         //System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
