@@ -376,7 +376,7 @@ public class BackgammonMCTS {
         
         */
 
-        //ENTIRE GAME TEST MULTI VS TRUE RANDOM
+        /*ENTIRE GAME TEST MULTI VS TRUE RANDOM
         Board test;
         Roll r;
         State start;
@@ -403,9 +403,10 @@ public class BackgammonMCTS {
             while (start.wincheck() == 0) {
                 if (start.white) {
                     //n = w.MCTS_hsp_rootparallel(start, 1, 450);
-                    n = w.MCTSmostvisitedpruned(start, 1, 50);
+                    //n = w.MCTSmostvisitedpruned(start, 1, 0, 50);
+                    //n = w.BlitzSiblings(start);
                     //n = w.MCTS_mvp_rootparallel(start, 1, 50);
-                    //n = w.MCTS_mvp_vcrp(start, 1, 6, 150);
+                    n = w.MCTS_mvp_vcrp(start, 1, 0, 6, 500);
                     //n = w.MCTShighestscorepruned(start, 1, 50);
                     //n = w.MCTSmostvisited(start, 50);
                     //n = w.MCTShighestscore(start, 450);
@@ -415,7 +416,7 @@ public class BackgammonMCTS {
                         next = new State(start, move);
                         first = false;
                     } else {
-                        if (w.tree.root.state.movelist.isEmpty()) {
+                        if (n == -1) {
                             //System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
                             next = new State(start, new int[]{});
                         } else {
@@ -425,13 +426,13 @@ public class BackgammonMCTS {
                     }
                     start = next;
                 } else {
-                    n = b.fullrandom(start);
+                    //n = b.fullrandom(start);
+                    n = b.BlitzSiblings(start);
                     //System.out.println(((start.white) ? "White" : "Black") + " rolled " +start.roll.steps[0]+ ", " +start.roll.steps[1] + ".");
-                    if (b.tree.root.state.movelist.isEmpty()) {
+                    if (n == -1) {
                         //System.out.println(((start.white) ? "White" : "Black") + " is forced to pass.");
                         next = new State(start, new int[]{});
                     } else {
-                        n = ThreadLocalRandom.current().nextInt(0, b.tree.root.state.movelist.size());
                         //System.out.println(((start.white) ? "White" : "Black") + " plays " +Arrays.toString(b.tree.root.state.movelist.get(n)) +".");
                         next = new State(start, b.tree.root.state.movelist.get(n));
                     }
@@ -452,7 +453,65 @@ public class BackgammonMCTS {
     
         }
         System.out.println("Out of 100 matches, White won " + whitewins + " times, and Black won " + blackwins + " times.");
+        */
         
+        //TOURNAMENT
+        Board test;
+        Roll r;
+        State start;
+        State next;
+        boolean white;
+        int whitewins = 0;
+        int blackwins = 0;
+        int n;
+        int games = 0;
+        MCTS w = new MCTS();
+        MCTS b = new MCTS();
+        //w.setpruningprofile(1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0);
+        //b.setpruningprofile(1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0);
+        for (int i = 0; i<5; i++) {
+            test = new Board();
+            r = new Roll();
+            games++;
+            while (r.steps[0] == r.steps[1]) {
+                r = new Roll();
+            }
+            white = (r.steps[0] > r.steps[1]);
+            start = new State(test, white, 0, 0, 0, r);
+            n = 0;
+            next = new State();
+            while (start.wincheck() == 0) {
+                if (start.white) {
+                    n = w.MCTSmostvisitedpruned(start, 1, 0, 3000);
+                    if (n == -1) {
+                        next = new State(start, new int[]{});
+                    } else {
+                        next = new State(start, w.tree.root.state.movelist.get(n));
+                    }
+                start = next;
+                } else {
+                    n = b.MCTSmostvisitedpruned(start, 1, 0, 3000);
+                    if (n == -1) {
+                        next = new State(start, new int[]{});
+                    } else {
+                        next = new State(start, b.tree.root.state.movelist.get(n));
+                    }
+                start = next;
+                }
+            }
+            if (start.wincheck() > 0) {
+                System.out.println("White wins game number " +games+ ".");
+                whitewins++;
+            } else {
+                System.out.println("Black wins game number " +games+ ".");
+                blackwins++;
+            }
+        }
+        if (whitewins > blackwins) {
+            System.out.println("White won " +whitewins+ " out of 5 games, and advances to the next bracket!");
+        } else {
+            System.out.println("Black won " +blackwins+ " out of 5 games, and advances to the next bracket!");
+        }
         
         /*
         //BACKPROPAGATE TEST

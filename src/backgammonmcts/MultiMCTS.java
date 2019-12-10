@@ -18,6 +18,7 @@ public class MultiMCTS extends MCTS implements Runnable {
     int id;
     Tree threadtree;
     int pruningfactor;
+    int treepruning;
     
     @Override
     public void run() {
@@ -28,8 +29,10 @@ public class MultiMCTS extends MCTS implements Runnable {
             Node current = selectnode(threadtree.root);
             current.expandnode();
             totalnodesexpanded++;
-            current.evalchildren(earlydefense, earlyblitz, earlyprime, earlyanchor, middefense, midblitz, midprime, midanchor);
-            current.prunenode(pruningfactor);
+            if (treepruning > 0) {
+                current.evalchildren(earlydefense, earlyblitz, earlyprime, earlyanchor, middefense, midblitz, midprime, midanchor);
+                current.prunenode(pruningfactor);
+            }
             Node rollout = current;
             if (!current.children.isEmpty()) {
                 rollout = current.getRandomChild();
@@ -40,11 +43,12 @@ public class MultiMCTS extends MCTS implements Runnable {
         //System.out.println("Thread " +id+ " finished with " +totalnodesexpanded+ " Nodes expanded in total!");
     }
     
-    public MultiMCTS(State s, int timelimit, int i, int n) {
+    public MultiMCTS(State s, int timelimit, int i, int n, int m) {
         this.state = new State(s);
         this.time = timelimit;
         this.id = i;
         this.pruningfactor = n;
+        this.treepruning = m;
     }
     
 }

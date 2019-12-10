@@ -24,10 +24,12 @@ import java.util.concurrent.TimeUnit;
 public class MCTS {
 
     int pruningfactor = 100;
+    int treepruning = 0;
     int randomfactor = pruningfactor;
     int totalnodesexpanded = 0;
     int totalrollouts = 0;
     Tree tree;
+    boolean endgame = false; //Boolean that turns true if no enemy pieces can attack friendly pieces anymore (for BLITZ)
     double earlydefense = 0;
     double earlyblitz = 0;
     double earlyprime = 0;
@@ -44,6 +46,12 @@ public class MCTS {
     
     public int MCTSmostvisited (State s, int time) {
         long end = System.currentTimeMillis() + time;
+        if ((s.movelist.isEmpty()) && (!s.checked)) {
+            s.movehelper(s.board, s.roll, s.white);
+        }
+    	if (s.movelist.isEmpty()) {
+    		return -1;
+    	}
         tree = new Tree(new Node(s));
         //int debugb = 0;
         while (System.currentTimeMillis() < end) {
@@ -65,6 +73,12 @@ public class MCTS {
     
     public int MCTShighestscore (State s, int time) {
         long end = System.currentTimeMillis() + time;
+        if ((s.movelist.isEmpty()) && (!s.checked)) {
+            s.movehelper(s.board, s.roll, s.white);
+        }
+    	if (s.movelist.isEmpty()) {
+    		return -1;
+    	}
         tree = new Tree(new Node(s));
         Node winner;
         //int debugb = 0;
@@ -89,17 +103,26 @@ public class MCTS {
         return winner.siblingnumber;
     }
     
-    public int MCTSmostvisitedpruned (State s, int n, int time) {
+    public int MCTSmostvisitedpruned (State s, int n, int m, int time) {
         pruningfactor = n;
+        treepruning = m;
         long end = System.currentTimeMillis() + time;
+        if ((s.movelist.isEmpty()) && (!s.checked)) {
+            s.movehelper(s.board, s.roll, s.white);
+        }
+    	if (s.movelist.isEmpty()) {
+    		return -1;
+    	}
         tree = new Tree(new Node(s));
         //int debugb = 0;
         while (System.currentTimeMillis() < end) {
             Node current = selectnode(tree.root);
             current.expandnode();
             totalnodesexpanded++;
-            current.evalchildren(earlydefense, earlyblitz, earlyprime, earlyanchor, middefense, midblitz, midprime, midanchor);
-            current.prunenode(n);
+            if (treepruning > 0) {
+                current.evalchildren(earlydefense, earlyblitz, earlyprime, earlyanchor, middefense, midblitz, midprime, midanchor);
+                current.prunenode(m);
+            }
             Node rollout = current;
             if (!current.children.isEmpty()) {
                 rollout = current.getRandomChild();
@@ -114,17 +137,26 @@ public class MCTS {
         return winner.siblingnumber;
     }
     
-    public int MCTShighestscorepruned (State s, int n, int time) {
+    public int MCTShighestscorepruned (State s, int n, int m, int time) {
         pruningfactor = n;
+        treepruning = m;
         long end = System.currentTimeMillis() + time;
+        if ((s.movelist.isEmpty()) && (!s.checked)) {
+            s.movehelper(s.board, s.roll, s.white);
+        }
+    	if (s.movelist.isEmpty()) {
+    		return -1;
+    	}
         tree = new Tree(new Node(s));
         Node winner;
         //int debugb = 0;
         while (System.currentTimeMillis() < end) {
             Node current = selectnode(tree.root);
             current.expandnode();
-            current.evalchildren(earlydefense, earlyblitz, earlyprime, earlyanchor, middefense, midblitz, midprime, midanchor);
-            current.prunenode(n);
+            if (treepruning > 0) {
+                current.evalchildren(earlydefense, earlyblitz, earlyprime, earlyanchor, middefense, midblitz, midprime, midanchor);
+                current.prunenode(m);
+            }
             Node rollout = current;
             if (!current.children.isEmpty()) {
                 rollout = current.getRandomChild();
@@ -143,18 +175,433 @@ public class MCTS {
         return winner.siblingnumber;
     }
     
-    public int MCTS_hsp_rootparallel (State s, int n, int time) throws InterruptedException {
+    //Plays according to blitz strategy
+    public int[] Blitz(State s) {
+    	//Fill the movelist with all legal moves
+    	s.movehelper(s.getboard(),s.getroll(),s.getwhite());
+    	//If the movelist is empty return  an empty int[]
+    	if (s.getmovelist().isEmpty()) {
+    		return new int[]{};
+    	}
+    	//Else continue with blitz strategy
+    	else {
+	    	int[] tempBoard = s.board.getboard(); //Creates a copy of the board without any changes (moves, etc.)
+	    	int[] blitzScore = new int[s.getmovelist().size()]; //The score of each move, the move with the highest score gets returned.
+	    	
+	    	//Loop that iterates over the movelist
+	    	for(int i=0;i<s.getmovelist().size();i++) {
+	    		//Creating a local copy of the state (That resets every loop)
+	    		State r = new State(s);
+	    		
+	    		//Fill the movelist with all legal moves
+	    		r.movehelper(r.getboard(),r.getroll(),r.getwhite());
+	    		
+	    		//Applying the current move to the copy of the state
+	    		r.board.applymove(r.getmovelist().get(i));
+	    		
+	    		//If the player is white
+	    		if(r.getwhite() && !endgame) {
+	    			//Loop that iterates over each moved checker INSIDE the move (where the checker moves to)
+	    			for(int j=1;j<r.getmovelist().get(i).length;j+=2) {
+	    				//If-statement that prevents arrayOutOfBoundsException
+	    				if((r.getmovelist().get(i)[j]) > 0) {
+	    					//If there is a single enemy checker on the place the move is, the score of the move will be incremented
+	    					//according to the position of said checker (checkers closer to enemy's home give more points)
+	    					if(tempBoard[r.getmovelist().get(i)[j]] == -1) {
+	    						blitzScore[i] = blitzScore[i] + 1 * (r.getmovelist().get(i)[j]);
+	    					}
+	    					//If 2 checkers go to the same position AND attack an enemy checker, the score will be incremented as
+	    					//it takes an enemy to the bar and create a safe position for itself
+	    					if((j+2)<r.getmovelist().get(i).length && r.getmovelist().get(i)[j] == r.getmovelist().get(i)[j+2]
+	    							&& tempBoard[r.getmovelist().get(i)[j]] == -1) {
+	    						blitzScore[i] = blitzScore[i] + 1 * (r.getmovelist().get(i)[j]);
+	    					}
+	    					//If move follows up in an endgame state, blitzScore is reduced
+	    					//*Not sure if this enhances Blitz play*
+	    					if(checkEndgame(r.getboard().board)) {
+	    						blitzScore[i] = blitzScore[i] - blitzScore[i]/4;
+	    					}
+	    				}
+	    			}
+	    			//Loop that iterates over each moved checker INSIDE the move (Where the checker moves from)
+	    			for(int j=0;j<r.getmovelist().get(i).length;j+=2) {
+	    				//If the checker leaves 1 teammate vurnerable, decrease blitzScore
+	    				if(tempBoard[r.getmovelist().get(i)[j]] == 1) {
+    						blitzScore[i] = blitzScore[i] - 3;
+    					}
+	    			}
+	    		}
+	    		//If the player is black
+	    		else if (!r.getwhite() && !endgame) {
+	    			//Loop that iterates over each moved checker INSIDE the move (Where the checker moves to)
+	    			for(int j=1;j<r.getmovelist().get(i).length;j+=2) {
+	    				//If-statement that prevents arrayOutOfBoundsException
+	    				if((r.getmovelist().get(i)[j]) < 26) {
+	    					//If there is a single enemy checker on the place the move is, the score of the move will be incremented
+	    					//according to the position of said checker (checkers closer to enemy's home give more points)
+	    					if(tempBoard[r.getmovelist().get(i)[j]] == 1) {
+	    						blitzScore[i] = blitzScore[i] + 1 * (24-r.getmovelist().get(i)[j]);
+	    					}
+	    					//If 2 checkers go to the same position AND attack an enemy checker, the score will be incremented as
+	    					//it takes an enemy to the bar and create a safe position for itself
+	    					if((j+2)<r.getmovelist().get(i).length && r.getmovelist().get(i)[j] == r.getmovelist().get(i)[j+2]
+	    							&& tempBoard[r.getmovelist().get(i)[j]] == 1) {
+	    						blitzScore[i] = blitzScore[i] + 1 * (24-r.getmovelist().get(i)[j]);
+	    					}
+	    					//If move follows up in an endgame state, blitzScore is reduced
+	    					//*Not sure if this enhances Blitz play*
+	    					if(checkEndgame(r.getboard().board)) {
+	    						blitzScore[i] = blitzScore[i] - blitzScore[i]/4;
+	    					}
+	    				}
+	    			}
+	    			//Loop that iterates over each moved checker INSIDE the move (Where the checker moves from)
+	    			for(int j=0;j<r.getmovelist().get(i).length;j+=2) {
+	    				//If the checker leaves 1 teammate vurnerable, decrease blitzScore
+	    				if(tempBoard[r.getmovelist().get(i)[j]] == 1) {
+	    					blitzScore[i] = blitzScore[i] - 3;
+	    				}
+	    			}
+	    		}
+	    		//Playing in the endgame state
+	    		if(endgame) {
+	    			//If the player is white
+		    		if(r.getwhite()) {
+		    			//Loop that iterates over each moved checker INSIDE the move
+		    			for(int j=1;j<r.getmovelist().get(i).length;j+=2) {
+		    				//If-statement that prevents arrayOutOfBoundsException
+		    				if((r.getmovelist().get(i)[j]) > 0) {
+		    					//Adding to blitzScore if a piece can be beared off
+		    					if(r.getmovelist().get(i)[j] == -1) {
+		    						blitzScore[i] = blitzScore[i] + 7; 
+		    					}
+		    					//Adding to blitzScore according to the number of friendlies already on that position
+		    					if(tempBoard[r.getmovelist().get(i)[j]] == 0) {
+		    						blitzScore[i] = blitzScore[i] + 5; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == 1) {
+		    						blitzScore[i] = blitzScore[i] + 4; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == 2) {
+		    						blitzScore[i] = blitzScore[i] + 3; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == 3) {
+		    						blitzScore[i] = blitzScore[i] + 2; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == 4) {
+		    						blitzScore[i] = blitzScore[i] + 1; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] >= 5) {
+		    						blitzScore[i] = blitzScore[i]; 
+		    					}
+		    				}
+		    			}
+		    		}
+		    		//If the player is black
+		    		else {
+		    			//Loop that iterates over each moved checker INSIDE the move
+		    			for(int j=1;j<r.getmovelist().get(i).length;j+=2) {
+		    				//If-statement that prevents arrayOutOfBoundsException
+		    				if((r.getmovelist().get(i)[j]) < 26) {
+		    					//Adding to blitzScore if a piece can be beared off
+		    					if(r.getmovelist().get(i)[j] == 25) {
+		    						blitzScore[i] = blitzScore[i] + 7; 
+		    					}
+		    					//Adding to blitzScore according to the number of friendlies already on that position
+		    					if(tempBoard[r.getmovelist().get(i)[j]] == 0) {
+		    						blitzScore[i] = blitzScore[i] + 5; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == -1) {
+		    						blitzScore[i] = blitzScore[i] + 4; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == -2) {
+		    						blitzScore[i] = blitzScore[i] + 3; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == -3) {
+		    						blitzScore[i] = blitzScore[i] + 2; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == -4) {
+		    						blitzScore[i] = blitzScore[i] + 1; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] <= -5) {
+		    						blitzScore[i] = blitzScore[i]; 
+		    					}
+		    				}
+		    			}
+		    		}
+		    	}
+	    	}
+	    	
+	    	//Loops that determine whether the board is in the endgame state. Thus, checkers cannot attack eachother anymore.
+	    	//Only runs if board not in endgame yet.
+	    	if(!endgame) {
+		    	boolean endgameBool = false;
+				for(int p=0;p<26;p++) {
+					if(tempBoard[p]<0) {
+						for(int q=p;q<26;q++) {
+							if(tempBoard[q]>0) {
+								endgameBool = true;
+							}
+						}
+					}
+				}
+				//If no pieces are found that can be attacked, the game's state updates to be in the endgame
+				if(!endgameBool) {
+					endgame = true;
+					//System.out.println("endgame");
+				}
+	    	}
+	    	
+	    	//Creating an integer[] that stores scores and index to compare them with eachother
+	    	int[] max = new int[2];
+	    	max[0] = 0;
+	    	//Loop that goes over all the moves and scores
+	    	for(int i=0;i<blitzScore.length;i++) {
+	    		//Comparing current score to max and updating max if lower than current score
+	    		if(max[0] < blitzScore[i]) {
+	    			max[0] = blitzScore[i];
+	    			max[1] = i;
+	    		}
+	    	}
+	    	//Returning the move with the highest score
+                return s.getmovelist().get(max[1]);
+    	}
+    }
+    
+    public int BlitzSiblings (State s) {
+    	//Fill the movelist with all legal moves
+        if ((s.movelist.isEmpty()) && (!s.checked)) {
+            s.movehelper(s.board, s.roll, s.white);
+        }
+    	//If the movelist is empty return  an empty int[]
+    	if (s.getmovelist().isEmpty()) {
+    		return -1;
+    	}
+    	//Else continue with blitz strategy
+    	else {
+	    	int[] tempBoard = s.board.getboard(); //Creates a copy of the board without any changes (moves, etc.)
+	    	int[] blitzScore = new int[s.getmovelist().size()]; //The score of each move, the move with the highest score gets returned.
+	    	
+	    	//Loop that iterates over the movelist
+	    	for(int i=0;i<s.getmovelist().size();i++) {
+	    		//Creating a local copy of the state (That resets every loop)
+	    		State r = new State(s);
+	    		
+	    		//Fill the movelist with all legal moves
+	    		r.movehelper(r.getboard(),r.getroll(),r.getwhite());
+	    		
+	    		//Applying the current move to the copy of the state
+	    		r.board.applymove(r.getmovelist().get(i));
+	    		
+	    		//If the player is white
+	    		if(r.getwhite() && !endgame) {
+	    			//Loop that iterates over each moved checker INSIDE the move (where the checker moves to)
+	    			for(int j=1;j<r.getmovelist().get(i).length;j+=2) {
+	    				//If-statement that prevents arrayOutOfBoundsException
+	    				if((r.getmovelist().get(i)[j]) > 0) {
+	    					//If there is a single enemy checker on the place the move is, the score of the move will be incremented
+	    					//according to the position of said checker (checkers closer to enemy's home give more points)
+	    					if(tempBoard[r.getmovelist().get(i)[j]] == -1) {
+	    						blitzScore[i] = blitzScore[i] + 1 * (r.getmovelist().get(i)[j]);
+	    					}
+	    					//If 2 checkers go to the same position AND attack an enemy checker, the score will be incremented as
+	    					//it takes an enemy to the bar and create a safe position for itself
+	    					if((j+2)<r.getmovelist().get(i).length && r.getmovelist().get(i)[j] == r.getmovelist().get(i)[j+2]
+	    							&& tempBoard[r.getmovelist().get(i)[j]] == -1) {
+	    						blitzScore[i] = blitzScore[i] + 1 * (r.getmovelist().get(i)[j]);
+	    					}
+	    					//If move follows up in an endgame state, blitzScore is reduced
+	    					//*Not sure if this enhances Blitz play*
+	    					if(checkEndgame(r.getboard().board)) {
+	    						blitzScore[i] = blitzScore[i] - blitzScore[i]/4;
+	    					}
+	    				}
+	    			}
+	    			//Loop that iterates over each moved checker INSIDE the move (Where the checker moves from)
+	    			for(int j=0;j<r.getmovelist().get(i).length;j+=2) {
+	    				//If the checker leaves 1 teammate vurnerable, decrease blitzScore
+	    				if(tempBoard[r.getmovelist().get(i)[j]] == 1) {
+    						blitzScore[i] = blitzScore[i] - 3;
+    					}
+	    			}
+	    		}
+	    		//If the player is black
+	    		else if (!r.getwhite() && !endgame) {
+	    			//Loop that iterates over each moved checker INSIDE the move (Where the checker moves to)
+	    			for(int j=1;j<r.getmovelist().get(i).length;j+=2) {
+	    				//If-statement that prevents arrayOutOfBoundsException
+	    				if((r.getmovelist().get(i)[j]) < 26) {
+	    					//If there is a single enemy checker on the place the move is, the score of the move will be incremented
+	    					//according to the position of said checker (checkers closer to enemy's home give more points)
+	    					if(tempBoard[r.getmovelist().get(i)[j]] == 1) {
+	    						blitzScore[i] = blitzScore[i] + 1 * (24-r.getmovelist().get(i)[j]);
+	    					}
+	    					//If 2 checkers go to the same position AND attack an enemy checker, the score will be incremented as
+	    					//it takes an enemy to the bar and create a safe position for itself
+	    					if((j+2)<r.getmovelist().get(i).length && r.getmovelist().get(i)[j] == r.getmovelist().get(i)[j+2]
+	    							&& tempBoard[r.getmovelist().get(i)[j]] == 1) {
+	    						blitzScore[i] = blitzScore[i] + 1 * (24-r.getmovelist().get(i)[j]);
+	    					}
+	    					//If move follows up in an endgame state, blitzScore is reduced
+	    					//*Not sure if this enhances Blitz play*
+	    					if(checkEndgame(r.getboard().board)) {
+	    						blitzScore[i] = blitzScore[i] - blitzScore[i]/4;
+	    					}
+	    				}
+	    			}
+	    			//Loop that iterates over each moved checker INSIDE the move (Where the checker moves from)
+	    			for(int j=0;j<r.getmovelist().get(i).length;j+=2) {
+	    				//If the checker leaves 1 teammate vurnerable, decrease blitzScore
+	    				if(tempBoard[r.getmovelist().get(i)[j]] == 1) {
+	    					blitzScore[i] = blitzScore[i] - 3;
+	    				}
+	    			}
+	    		}
+	    		//Playing in the endgame state
+	    		if(endgame) {
+	    			//If the player is white
+		    		if(r.getwhite()) {
+		    			//Loop that iterates over each moved checker INSIDE the move
+		    			for(int j=1;j<r.getmovelist().get(i).length;j+=2) {
+		    				//If-statement that prevents arrayOutOfBoundsException
+		    				if((r.getmovelist().get(i)[j]) > 0) {
+		    					//Adding to blitzScore if a piece can be beared off
+		    					if(r.getmovelist().get(i)[j] == -1) {
+		    						blitzScore[i] = blitzScore[i] + 7; 
+		    					}
+		    					//Adding to blitzScore according to the number of friendlies already on that position
+		    					if(tempBoard[r.getmovelist().get(i)[j]] == 0) {
+		    						blitzScore[i] = blitzScore[i] + 5; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == 1) {
+		    						blitzScore[i] = blitzScore[i] + 4; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == 2) {
+		    						blitzScore[i] = blitzScore[i] + 3; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == 3) {
+		    						blitzScore[i] = blitzScore[i] + 2; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == 4) {
+		    						blitzScore[i] = blitzScore[i] + 1; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] >= 5) {
+		    						blitzScore[i] = blitzScore[i]; 
+		    					}
+		    				}
+		    			}
+		    		}
+		    		//If the player is black
+		    		else {
+		    			//Loop that iterates over each moved checker INSIDE the move
+		    			for(int j=1;j<r.getmovelist().get(i).length;j+=2) {
+		    				//If-statement that prevents arrayOutOfBoundsException
+		    				if((r.getmovelist().get(i)[j]) < 26) {
+		    					//Adding to blitzScore if a piece can be beared off
+		    					if(r.getmovelist().get(i)[j] == 25) {
+		    						blitzScore[i] = blitzScore[i] + 7; 
+		    					}
+		    					//Adding to blitzScore according to the number of friendlies already on that position
+		    					if(tempBoard[r.getmovelist().get(i)[j]] == 0) {
+		    						blitzScore[i] = blitzScore[i] + 5; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == -1) {
+		    						blitzScore[i] = blitzScore[i] + 4; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == -2) {
+		    						blitzScore[i] = blitzScore[i] + 3; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == -3) {
+		    						blitzScore[i] = blitzScore[i] + 2; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] == -4) {
+		    						blitzScore[i] = blitzScore[i] + 1; 
+		    					}
+		    					else if(tempBoard[r.getmovelist().get(i)[j]] <= -5) {
+		    						blitzScore[i] = blitzScore[i]; 
+		    					}
+		    				}
+		    			}
+		    		}
+		    	}
+	    	}
+	    	
+	    	//Loops that determine whether the board is in the endgame state. Thus, checkers cannot attack eachother anymore.
+	    	//Only runs if board not in endgame yet.
+	    	if(!endgame) {
+		    	boolean endgameBool = false;
+				for(int p=0;p<26;p++) {
+					if(tempBoard[p]<0) {
+						for(int q=p;q<26;q++) {
+							if(tempBoard[q]>0) {
+								endgameBool = true;
+							}
+						}
+					}
+				}
+				//If no pieces are found that can be attacked, the game's state updates to be in the endgame
+				if(!endgameBool) {
+					endgame = true;
+					//System.out.println("endgame");
+				}
+	    	}
+	    	
+	    	//Creating an integer[] that stores scores and index to compare them with eachother
+	    	int[] max = new int[2];
+	    	max[0] = 0;
+	    	//Loop that goes over all the moves and scores
+	    	for(int i=0;i<blitzScore.length;i++) {
+	    		//Comparing current score to max and updating max if lower than current score
+	    		if(max[0] < blitzScore[i]) {
+	    			max[0] = blitzScore[i];
+	    			max[1] = i;
+	    		}
+	    	}
+                tree = new Tree(new Node(s));
+                tree.root.expandnode();
+                return tree.root.children.get(max[1]).siblingnumber;
+    	}
+    }
+    
+    //Method that only checks if there is an endgame, instead of changing the whole game's state to endgame
+    public Boolean checkEndgame(int[] m) {
+    	boolean endgameBool = false;
+		for(int p=0;p<26;p++) {
+			if(m[p]<0) {
+				for(int q=p;q<26;q++) {
+					if(m[q]>0) {
+						endgameBool = true;
+					}
+				}
+			}
+		}
+		if(!endgameBool) {
+			return true;
+		}
+		else {
+			return false;
+		}
+    }
+    
+    public int MCTS_hsp_rootparallel (State s, int n, int m, int time) throws InterruptedException {
         pruningfactor = n;
+        treepruning = m;
+        if ((s.movelist.isEmpty()) && (!s.checked)) {
+            s.movehelper(s.board, s.roll, s.white);
+        }
+    	if (s.movelist.isEmpty()) {
+    		return -1;
+    	}
         tree = new Tree(new Node(s));
         Node winner;
-        MultiMCTS mmctsa = new MultiMCTS(s, time, 1, n);
-        MultiMCTS mmctsb = new MultiMCTS(s, time, 2, n);
-        MultiMCTS mmctsc = new MultiMCTS(s, time, 3, n);
-        MultiMCTS mmctsd = new MultiMCTS(s, time, 4, n);
-        MultiMCTS mmctse = new MultiMCTS(s, time, 5, n);
-        MultiMCTS mmctsf = new MultiMCTS(s, time, 6, n);
-        MultiMCTS mmctsg = new MultiMCTS(s, time, 7, n);
-        MultiMCTS mmctsh = new MultiMCTS(s, time, 8, n);
+        MultiMCTS mmctsa = new MultiMCTS(s, time, 1, n, m);
+        MultiMCTS mmctsb = new MultiMCTS(s, time, 2, n, m);
+        MultiMCTS mmctsc = new MultiMCTS(s, time, 3, n, m);
+        MultiMCTS mmctsd = new MultiMCTS(s, time, 4, n, m);
+        MultiMCTS mmctse = new MultiMCTS(s, time, 5, n, m);
+        MultiMCTS mmctsf = new MultiMCTS(s, time, 6, n, m);
+        MultiMCTS mmctsg = new MultiMCTS(s, time, 7, n, m);
+        MultiMCTS mmctsh = new MultiMCTS(s, time, 8, n, m);
         Thread one = new Thread(mmctsa);
         Thread two = new Thread(mmctsb);
         Thread three = new Thread(mmctsc);
@@ -180,7 +627,8 @@ public class MCTS {
         seven.join();
         eight.join();
         tree.root.expandnode();
-        for (int i = 0; i < (pruningfactor < tree.root.children.size() ? pruningfactor : tree.root.children.size()) ; i++) {
+        int min = Math.min(treepruning, tree.root.children.size());
+        for (int i = 0; i < min ; i++) {
             tree.root.children.get(i).state.score =
                     mmctsa.threadtree.root.children.get(i).state.score +  
                     mmctsb.threadtree.root.children.get(i).state.score +
@@ -199,13 +647,20 @@ public class MCTS {
         return winner.siblingnumber;
     }
     
-    public int MCTS_mvp_vcrp (State s, int n, int t, int time) throws InterruptedException {
+    public int MCTS_mvp_vcrp (State s, int n, int m, int t, int time) throws InterruptedException {
         pruningfactor = n;
+        treepruning = m;
+        if ((s.movelist.isEmpty()) && (!s.checked)) {
+            s.movehelper(s.board, s.roll, s.white);
+        }
+    	if (s.movelist.isEmpty()) {
+    		return -1;
+    	}
         tree = new Tree(new Node(s));
         ExecutorService threadPool = Executors.newFixedThreadPool(t);
         ArrayList<MultiMCTS> list = new ArrayList<>();
         for (int i = 0; i < t; i++) {
-            list.add(new MultiMCTS(s, time, i, n));
+            list.add(new MultiMCTS(s, time, i, n, m));
         }
         for (int i = 0; i < t; i++) {
             threadPool.submit(list.get(i));
@@ -214,7 +669,7 @@ public class MCTS {
         threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
         tree.root.expandnode();
         for (int i = 0; i < t; i++) {
-            for (int j = 0; j < (pruningfactor < tree.root.children.size() ? pruningfactor : tree.root.children.size()); j++) {
+            for (int j = 0; j < (treepruning < tree.root.children.size() ? treepruning : tree.root.children.size()); j++) {
                 tree.root.children.get(j).state.visits += list.get(i).threadtree.root.children.get(j).state.visits;
             }
         }
@@ -222,14 +677,21 @@ public class MCTS {
         return winner.siblingnumber;
     }
     
-    public int MCTS_hsp_vcrp (State s, int n, int t, int time) throws InterruptedException {
+    public int MCTS_hsp_vcrp (State s, int n, int m, int t, int time) throws InterruptedException {
         pruningfactor = n;
+        treepruning = m;
+        if ((s.movelist.isEmpty()) && (!s.checked)) {
+            s.movehelper(s.board, s.roll, s.white);
+        }
+    	if (s.movelist.isEmpty()) {
+    		return -1;
+    	}
         tree = new Tree(new Node(s));
         Node winner;
         ExecutorService threadPool = Executors.newFixedThreadPool(t);
         ArrayList<MultiMCTS> list = new ArrayList<>();
         for (int i = 0; i < t; i++) {
-            list.add(new MultiMCTS(s, time, i, n));
+            list.add(new MultiMCTS(s, time, i, n, m));
         }
         for (int i = 0; i < t; i++) {
             threadPool.submit(list.get(i));
@@ -238,7 +700,7 @@ public class MCTS {
         threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
         tree.root.expandnode();
         for (int i = 0; i < t; i++) {
-            for (int j = 0; j < (pruningfactor < tree.root.children.size() ? pruningfactor : tree.root.children.size()); j++) {
+            for (int j = 0; j < (treepruning < tree.root.children.size() ? treepruning : tree.root.children.size()); j++) {
                 tree.root.children.get(j).state.score += list.get(i).threadtree.root.children.get(j).state.score;
             }
         }
@@ -251,6 +713,12 @@ public class MCTS {
     }
     
     public int fullrandom (State s) {
+        if ((s.movelist.isEmpty()) && (!s.checked)) {
+            s.movehelper(s.board, s.roll, s.white);
+        }
+    	if (s.movelist.isEmpty()) {
+    		return -1;
+    	}
         tree = new Tree(new Node(s));
         Node current = tree.root;
         current.expandnode();
@@ -258,17 +726,24 @@ public class MCTS {
         return n;
     }
     
-    public int MCTS_mvp_rootparallel (State s, int n, int time) throws InterruptedException {
+    public int MCTS_mvp_rootparallel (State s, int n, int m, int time) throws InterruptedException {
         pruningfactor = n;
+        treepruning = m;
+        if ((s.movelist.isEmpty()) && (!s.checked)) {
+            s.movehelper(s.board, s.roll, s.white);
+        }
+    	if (s.movelist.isEmpty()) {
+    		return -1;
+    	}
         tree = new Tree(new Node(s));
-        MultiMCTS mmctsa = new MultiMCTS(s, time, 1, n);
-        MultiMCTS mmctsb = new MultiMCTS(s, time, 2, n);
-        MultiMCTS mmctsc = new MultiMCTS(s, time, 3, n);
-        MultiMCTS mmctsd = new MultiMCTS(s, time, 4, n);
-        MultiMCTS mmctse = new MultiMCTS(s, time, 5, n);
-        MultiMCTS mmctsf = new MultiMCTS(s, time, 6, n);
-        MultiMCTS mmctsg = new MultiMCTS(s, time, 7, n);
-        MultiMCTS mmctsh = new MultiMCTS(s, time, 8, n);
+        MultiMCTS mmctsa = new MultiMCTS(s, time, 1, n, m);
+        MultiMCTS mmctsb = new MultiMCTS(s, time, 2, n, m);
+        MultiMCTS mmctsc = new MultiMCTS(s, time, 3, n, m);
+        MultiMCTS mmctsd = new MultiMCTS(s, time, 4, n, m);
+        MultiMCTS mmctse = new MultiMCTS(s, time, 5, n, m);
+        MultiMCTS mmctsf = new MultiMCTS(s, time, 6, n, m);
+        MultiMCTS mmctsg = new MultiMCTS(s, time, 7, n, m);
+        MultiMCTS mmctsh = new MultiMCTS(s, time, 8, n, m);
         Thread one = new Thread(mmctsa);
         Thread two = new Thread(mmctsb);
         Thread three = new Thread(mmctsc);
@@ -294,6 +769,7 @@ public class MCTS {
         seven.join();
         eight.join();
         tree.root.expandnode();
+        int min = Math.min(treepruning, tree.root.children.size());
         //System.out.println("The root of the tree in thread one has " +mmctsa.threadtree.root.children.size()+ " children.");
         //System.out.println("They have " + mmctsa.threadtree.root.children.get(0).state.visits + " and " + mmctsa.threadtree.root.children.get(1).state.visits + " visits, respectively.");
         //System.out.println("The root of the tree in thread two has " +mmctsb.threadtree.root.children.size()+ " children.");
@@ -391,7 +867,7 @@ public class MCTS {
         //    }
         //}
             
-        for (int i = 0; i < (pruningfactor < tree.root.children.size() ? pruningfactor : tree.root.children.size()) ; i++) {
+        for (int i = 0; i < min; i++) {
             tree.root.children.get(i).state.visits =
                     mmctsa.threadtree.root.children.get(i).state.visits +  
                     mmctsb.threadtree.root.children.get(i).state.visits +
@@ -432,9 +908,9 @@ public class MCTS {
             if ((r > 0) && (temp.state.white)) {
                 temp.state.score += r;
             }
-            if ((r < 0) && (!temp.state.white)) {
-                temp.state.score -= r;
-            }
+            //if ((r < 0) && (!temp.state.white)) {
+            //    temp.state.score -= r;
+            //}
             temp = temp.parent;
         }
     }
@@ -453,8 +929,10 @@ public class MCTS {
         while (temp.state.winner == 0) {
             temp.expandnode();
             totalnodesexpanded++;
-            temp.evalchildren(earlydefense, earlyblitz, earlyprime, earlyanchor, middefense, midblitz, midprime, midanchor);
-            temp.prunenode(pruningfactor);
+            if (pruningfactor > 0) {
+                temp.evalchildren(earlydefense, earlyblitz, earlyprime, earlyanchor, middefense, midblitz, midprime, midanchor);
+                temp.prunenode(pruningfactor);
+            }
             temp = temp.getRandomChild();
         }
         totalrollouts++;
