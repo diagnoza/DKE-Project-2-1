@@ -1,3 +1,5 @@
+package gui;
+
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
@@ -64,13 +66,62 @@ public class secondwindow {
         HC.setBorder(new LineBorder(Color.BLACK, 2));
         HC.setBackground(Color.LIGHT_GRAY);
         HC.setFont(new Font("Times New Roman", Font.BOLD, 26));
-        
+        HC.addMouseListener(new MouseListener() {
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            public void mouseExited(MouseEvent e) {
+
+            }
+
+            public void mouseReleased(MouseEvent e) {
+            }
+
+            public void mousePressed(MouseEvent e) {
+            }
+
+            public void mouseClicked(MouseEvent e) {
+
+                fourthwindow.components(window);
+                fourthwindow.labels();
+                fourthwindow.addPieces();
+                frame.dispose();
+
+            }
+        });
+
         //AI vs AI button
         JButton CC = new JButton("Computer vs Computer");
         CC.setBounds(370, 450, 300, 90);
         CC.setBorder(new LineBorder(Color.BLACK, 2));
         CC.setBackground(Color.LIGHT_GRAY);
         CC.setFont(new Font("Times New Roman", Font.BOLD, 26));
+        CC.addMouseListener(new MouseListener() {
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            public void mouseExited(MouseEvent e) {
+
+            }
+
+            public void mouseReleased(MouseEvent e) {
+            }
+
+            public void mousePressed(MouseEvent e) {
+            }
+
+            public void mouseClicked(MouseEvent e) {
+
+                fifthwindow.components(window);
+                fifthwindow.labels();
+                fifthwindow.addPieces();
+                // fifthwindow.runAI();
+                frame.dispose();
+
+            }
+        });
 
         //Back button
         JButton back = new JButton();
