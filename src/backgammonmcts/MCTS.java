@@ -647,7 +647,7 @@ public class MCTS {
         return winner.siblingnumber;
     }
     
-    public int MCTS_mvp_vcrp (State s, int n, int m, int t, int time) throws InterruptedException {
+    public int MCTS_mvp_vcrp (State s, int n, int m, int time) throws InterruptedException {
         pruningfactor = n;
         treepruning = m;
         if ((s.movelist.isEmpty()) && (!s.checked)) {
@@ -657,6 +657,7 @@ public class MCTS {
     		return -1;
     	}
         tree = new Tree(new Node(s));
+        int t = Runtime.getRuntime().availableProcessors();
         ExecutorService threadPool = Executors.newFixedThreadPool(t);
         ArrayList<MultiMCTS> list = new ArrayList<>();
         for (int i = 0; i < t; i++) {
@@ -668,8 +669,12 @@ public class MCTS {
         threadPool.shutdown();
         threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
         tree.root.expandnode();
+        if (treepruning > 0) {
+            tree.root.evalchildren(earlydefense, earlyblitz, earlyprime, earlyanchor, middefense, midblitz, midprime, midanchor);
+            tree.root.prunenode(pruningfactor);
+        }
         for (int i = 0; i < t; i++) {
-            for (int j = 0; j < (treepruning < tree.root.children.size() ? treepruning : tree.root.children.size()); j++) {
+            for (int j = 0; j < list.get(i).threadtree.root.children.size(); j++) {
                 tree.root.children.get(j).state.visits += list.get(i).threadtree.root.children.get(j).state.visits;
             }
         }
@@ -677,9 +682,7 @@ public class MCTS {
         return winner.siblingnumber;
     }
     
-    public int MCTS_hsp_vcrp (State s, int n, int m, int t, int time) throws InterruptedException {
-        pruningfactor = n;
-        treepruning = m;
+    public int MCTS_Epsilon (State s, Player player, int time) throws InterruptedException {
         if ((s.movelist.isEmpty()) && (!s.checked)) {
             s.movehelper(s.board, s.roll, s.white);
         }
@@ -687,11 +690,45 @@ public class MCTS {
     		return -1;
     	}
         tree = new Tree(new Node(s));
-        Node winner;
+        int t = Runtime.getRuntime().availableProcessors();
         ExecutorService threadPool = Executors.newFixedThreadPool(t);
         ArrayList<MultiMCTS> list = new ArrayList<>();
         for (int i = 0; i < t; i++) {
-            list.add(new MultiMCTS(s, time, i, n, m));
+            list.add(new MultiMCTS(s, time, i, 1, 0));
+        }
+        for (int i = 0; i < t; i++) {
+            threadPool.submit(list.get(i));
+        }
+        threadPool.shutdown();
+        threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+        tree.root.expandnode();
+        if (treepruning > 0) {
+            tree.root.evalchildren(earlydefense, earlyblitz, earlyprime, earlyanchor, middefense, midblitz, midprime, midanchor);
+            tree.root.prunenode(pruningfactor);
+        }
+        for (int i = 0; i < t; i++) {
+            for (int j = 0; j < list.get(i).threadtree.root.children.size(); j++) {
+                tree.root.children.get(j).state.visits += list.get(i).threadtree.root.children.get(j).state.visits;
+            }
+        }
+        Node winner = Collections.max(tree.root.children, Comparator.comparing(c -> c.state.visits));
+        return winner.siblingnumber;
+    }
+    
+    /*
+    public int MCTS_Epsilon (State s, Player player, int time, Tree tree) throws InterruptedException {
+        if ((s.movelist.isEmpty()) && (!s.checked)) {
+            s.movehelper(s.board, s.roll, s.white);
+        }
+    	if (s.movelist.isEmpty()) {
+    		return -1;
+    	}
+        Node winner;
+        int t = Runtime.getRuntime().availableProcessors();
+        ExecutorService threadPool = Executors.newFixedThreadPool(t);
+        ArrayList<MultiMCTS> list = new ArrayList<>();
+        for (int i = 0; i < t; i++) {
+            list.add(new MultiMCTS(s, time, i, 0, 0));
         }
         for (int i = 0; i < t; i++) {
             threadPool.submit(list.get(i));
@@ -711,6 +748,7 @@ public class MCTS {
         }
         return winner.siblingnumber;
     }
+    */
     
     public int fullrandom (State s) {
         if ((s.movelist.isEmpty()) && (!s.checked)) {
@@ -925,6 +963,21 @@ public class MCTS {
     }
     
     public int randomplay(Node n) {
+        Node temp = n;
+        while (temp.state.winner == 0) {
+            temp.expandnode();
+            totalnodesexpanded++;
+            if (pruningfactor > 0) {
+                temp.evalchildren(earlydefense, earlyblitz, earlyprime, earlyanchor, middefense, midblitz, midprime, midanchor);
+                temp.prunenode(pruningfactor);
+            }
+            temp = temp.getRandomChild();
+        }
+        totalrollouts++;
+        return temp.state.winner;
+    }
+    
+    public int randomplayEpsilon (Node n, double e) {
         Node temp = n;
         while (temp.state.winner == 0) {
             temp.expandnode();
