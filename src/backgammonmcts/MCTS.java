@@ -682,6 +682,7 @@ public class MCTS {
         return winner.siblingnumber;
     }
     
+	/*
     public int MCTS_Epsilon (State s, Player player, int time) throws InterruptedException {
         if ((s.movelist.isEmpty()) && (!s.checked)) {
             s.movehelper(s.board, s.roll, s.white);
@@ -715,7 +716,7 @@ public class MCTS {
         return winner.siblingnumber;
     }
     
-    /*
+    
     public int MCTS_Epsilon (State s, Player player, int time, Tree tree) throws InterruptedException {
         if ((s.movelist.isEmpty()) && (!s.checked)) {
             s.movehelper(s.board, s.roll, s.white);
