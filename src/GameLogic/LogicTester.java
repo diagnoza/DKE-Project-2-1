@@ -9,7 +9,6 @@ public class LogicTester {
             // Start game
             Board board = new Board();
             // Move pieces
-
             // Test dice rolling
             Die die = new Die();
             int dieRoll1 =  die.roll();
